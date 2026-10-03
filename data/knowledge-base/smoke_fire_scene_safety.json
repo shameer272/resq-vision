@@ -1,0 +1,16 @@
+{
+  "id": "KB-FIRE-002",
+  "category": "smoke_fire_observations",
+  "title": "Smoke and Fire Scene Observation & Public Safety Reference",
+  "source": "US Fire Administration (USFA) & Ready.gov Fire Safety Protocols",
+  "source_url": "https://www.ready.gov/home-fires",
+  "verified_date": "2026-02-10",
+  "summary": "Observational assessment principles for smoke plumes, residential/commercial fires, and safe stand-off protocols.",
+  "content": "Visual smoke indicates incomplete combustion and rapid hazard evolution. Untrained observers must stay upwind and uphill from any smoke plume. Key observations for dispatchers include: 1. Smoke color and volume (black dense smoke suggests petroleum/synthetic materials; light gray/white may indicate early organic combustion or steam). 2. Visible flame heights and proximity to adjacent structures or vegetation. 3. Structural stability warnings (bowing walls, roof sagging, broken windows with venting fire). 4. Presence of hazardous chemical placards or industrial tanks. Observers must never re-enter burning structures or attempt firefighting without protective equipment and specialized training.",
+  "key_points": [
+    "Stay upwind and uphill of toxic smoke plumes",
+    "Report smoke color, density, and propagation speed",
+    "Identify proximity to power lines, gas mains, and adjacent buildings",
+    "Do not approach or attempt entry into burning structures"
+  ]
+}

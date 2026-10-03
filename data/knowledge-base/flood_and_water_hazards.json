@@ -1,0 +1,16 @@
+{
+  "id": "KB-FLOOD-003",
+  "category": "flooding",
+  "title": "Flash Flooding, Water Hazards, and Submerged Roadway Protocol",
+  "source": "US National Oceanic and Atmospheric Administration (NOAA) National Weather Service & Ready.gov Floods",
+  "source_url": "https://www.weather.gov/safety/flood-turn-around-dont-drown",
+  "verified_date": "2026-01-20",
+  "summary": "Observational reporting guidelines for swift water, inundated roads, and entrapment risks.",
+  "content": "Flowing water as shallow as 6 inches can knock down adults, and 12-24 inches of moving water can float or carry away most passenger vehicles. Crucial field intelligence consists of: 1. Water depth relative to visible objects (tire axles, guard rails, curbs). 2. Flow rate (standing water versus fast-moving debris-laden current). 3. Occupants stranded on vehicle roofs, trees, or elevated ground. 4. Submerged electrical conduits, downed utility poles, or open manhole covers. Bystanders must never walk or drive into standing or moving water ('Turn Around Don't Drown').",
+  "key_points": [
+    "Never attempt to drive or walk through flooded roadways",
+    "Estimate water depth using fixed visual markers (fire hydrants, wheels, signs)",
+    "Check for downed electric lines touching pooled water",
+    "Note stranded occupants and exact elevation point"
+  ]
+}

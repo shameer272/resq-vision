@@ -1,0 +1,16 @@
+{
+  "id": "KB-REPORT-006",
+  "category": "emergency_reporting",
+  "title": "Emergency Situation Dispatch Communication Protocol (ETHANE/METHANE Framework)",
+  "source": "College of Paramedics & International Emergency Dispatch Standards",
+  "source_url": "https://www.collegeofparamedics.co.uk",
+  "verified_date": "2026-01-10",
+  "summary": "Standard operational framework for structured situational reports to public safety answering points (PSAPs).",
+  "content": "Emergency dispatchers rely on structured situational intelligence known internationally as the METHANE reporting model: 1. Major incident declaration (or confirmation of non-major status). 2. Exact location (GPS, street intersection, milepost, building name). 3. Type of incident (collision, fire, hazardous material, structural, water). 4. Hazards present or suspected (fire, toxic fumes, electrical, unstable structures). 5. Access and egress routes (best clear route for emergency apparatus, blocked avenues). 6. Number, severity, and type of casualties (approximate counts, trapped individuals). 7. Emergency services present or required (fire, ambulance, police, heavy rescue). Clear distinction between visual observation and bystander assumption is vital to avoid dispatching improper response packages.",
+  "key_points": [
+    "Use structured METHANE format for high clarity",
+    "Identify access and egress bottlenecks for emergency vehicles",
+    "Separate direct visual observations from second-hand assumptions",
+    "Communicate presence of environmental hazards before responder arrival"
+  ]
+}

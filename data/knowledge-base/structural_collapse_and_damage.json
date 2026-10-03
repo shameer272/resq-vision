@@ -1,0 +1,16 @@
+{
+  "id": "KB-STRUCT-005",
+  "category": "damaged_buildings",
+  "title": "Structural Collapse and Damaged Infrastructure Assessment Protocol",
+  "source": "FEMA Urban Search and Rescue (US&R) & Ready.gov Structural Safety",
+  "source_url": "https://www.fema.gov/emergency-managers/national-preparedness/frameworks/search-and-rescue",
+  "verified_date": "2026-02-18",
+  "summary": "Visual indicators of imminent structural failure and collapse zone safety distances.",
+  "content": "Buildings compromised by blast, seismic activity, fire, or vehicular impact exhibit specific vulnerability signs. Observers must assess: 1. Collapse zone distance (minimum safe buffer is 1.5 times the full height of the exterior wall). 2. Cracks in masonry that widen upward, leaning exterior columns, or bulging load-bearing walls. 3. Gas smell or loud hissing indicating damaged utility connections. 4. Presence of secondary collapse hazards (parapets, cornices, air conditioning chillers on roofs). Observers must NEVER enter an evacuated or compromised building to retrieve property.",
+  "key_points": [
+    "Establish collapse zone at minimum 1.5x building height",
+    "Identify leaning masonry, sagging floors, or foundation fractures",
+    "Listen for utility line ruptures (hissing gas or arcing wires)",
+    "Avoid entering compromised structures under any circumstances"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "id": "KB-WEATHER-004",
+  "category": "severe_weather",
+  "title": "Severe Weather and Cyclone/Storm Hazard Assessment",
+  "source": "India National Disaster Management Authority (NDMA) & FEMA Severe Weather Safety",
+  "source_url": "https://ndma.gov.in/Resources/guidelines",
+  "verified_date": "2026-03-01",
+  "summary": "Observation guidelines for storm damage, high wind impacts, and fallen trees.",
+  "content": "Severe cyclonic or convective weather produces multi-dimensional hazards including wind-borne debris, uprooted trees, and sheared utility infrastructure. Critical observational reporting elements include: 1. Roadway passability for emergency response apparatus (ambulances/fire engines). 2. Tangled power cables or transformers sparking on wet pavement. 3. Roof damage, displaced tin sheets, or shattered glass storefronts. 4. Presence of sheltered individuals in non-reinforced structures. Maintain extreme caution around downed power lines (assume all lines are energized).",
+  "key_points": [
+    "Assume all downed cables and metal fences are actively energized",
+    "Identify blocked emergency transport routes",
+    "Report flying debris hazards and roof integrity loss",
+    "Maintain sheltered perimeter during active severe squalls"
+  ]
+}

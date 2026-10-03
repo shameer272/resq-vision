@@ -1,0 +1,16 @@
+{
+  "id": "KB-ROAD-001",
+  "category": "road_incidents",
+  "title": "Road Traffic Collision Safety and Reporting Reference",
+  "source": "US National Highway Traffic Safety Administration (NHTSA) & Red Cross Road Safety Guidelines",
+  "source_url": "https://www.nhtsa.gov/road-safety",
+  "verified_date": "2026-01-15",
+  "summary": "Standard observational safety checklist and hazard identification principles for vehicular crashes.",
+  "content": "In vehicular collisions, immediate scene assessment without physical endangerment of untrained bystanders is vital. Observers should verify from a safe distance: 1. Presence of smoke, fuel leaks, or electrical sparking. 2. Obstruction of roadway lanes or oncoming traffic flow. 3. Number and types of vehicles involved (commercial transport, passenger cars, motorcycles). 4. Approximate occupant status without moving injured persons unless immediate catastrophic fire threatens. 5. Precise highway mile-marker, intersection, or physical landmark. Bystanders must maintain a perimeter of at least 50-100 feet if smoke or hazardous cargo placards are detected.",
+  "key_points": [
+    "Never approach leaking fuel or active battery thermal events",
+    "Identify vehicle types and roadway blockages",
+    "Record exact landmark or cross-street",
+    "Do not move injured occupants unless imminent explosion or submersion threat exists"
+  ]
+}
