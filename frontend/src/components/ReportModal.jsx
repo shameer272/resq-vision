@@ -158,7 +158,7 @@ export default function ReportModal({ isOpen, onClose, reportData, incidentData,
           {observedFacts && observedFacts.length > 0 && (
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">
-                Evidence-Linked Observations (Visual & Reported)
+                {t("report.heading_observations", "Evidence-Linked Observations (Visual & Reported)")}
               </h4>
               <div className="space-y-2">
                 {observedFacts.map((o, idx) => (
@@ -170,7 +170,7 @@ export default function ReportModal({ isOpen, onClose, reportData, incidentData,
                       <span className="font-semibold text-slate-200">{o.description}</span>
                       {o.evidence && (
                         <p className="text-[11px] text-slate-400 italic mt-0.5">
-                          Evidence: "{o.evidence}"
+                          {t("report.evidence_prefix", "Evidence:")} "{o.evidence}"
                         </p>
                       )}
                     </div>
@@ -187,7 +187,7 @@ export default function ReportModal({ isOpen, onClose, reportData, incidentData,
           {potentialHazards && potentialHazards.length > 0 && (
             <div>
               <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">
-                Potential Hazards & Verification Mandates
+                {t("report.heading_hazards", "Potential Hazards & Verification Mandates")}
               </h4>
               <div className="space-y-2">
                 {potentialHazards.map((c, idx) => (
@@ -198,7 +198,7 @@ export default function ReportModal({ isOpen, onClose, reportData, incidentData,
                     <span className="font-bold text-slate-100">{c.concern || c.label || "Potential Hazard"}</span>
                     {c.reason && <p className="text-slate-300 mt-1">{c.reason}</p>}
                     <p className="text-[10px] text-amber-300 font-semibold mt-1">
-                      ⚠️ Human verification mandatory prior to response intervention.
+                      {t("report.human_verification_mandate", "⚠️ Human verification mandatory prior to response intervention.")}
                     </p>
                   </div>
                 ))}
@@ -208,7 +208,9 @@ export default function ReportModal({ isOpen, onClose, reportData, incidentData,
 
           {/* Disclaimers */}
           <div className="rounded-xl border border-red-950/80 bg-red-950/30 p-3 text-[11px] text-red-300 leading-relaxed">
-            <span className="font-bold uppercase block mb-1">Safety Notice & AI Operational Limits</span>
+            <span className="font-bold uppercase block mb-1">
+              {t("report.safety_limits_title", "Safety Notice & AI Operational Limits")}
+            </span>
             {safetyDisclaimer}
           </div>
         </div>
@@ -216,7 +218,7 @@ export default function ReportModal({ isOpen, onClose, reportData, incidentData,
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-slate-800 px-6 py-3 bg-slate-950/60">
           <span className="text-[11px] text-slate-500">
-            ResQ Vision • Powered by Gemma 4 Multimodal Intelligence
+            {t("report.powered_by", "ResQ Vision • Powered by Gemma 4 Multimodal Intelligence")}
           </span>
           <button
             onClick={onClose}

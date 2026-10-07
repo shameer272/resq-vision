@@ -40,7 +40,7 @@ export default function ConcernCard({ concernItem }) {
         {requires_human_verification && (
           <span className="shrink-0 inline-flex items-center space-x-1 rounded-full border border-amber-700/60 bg-amber-950/80 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
             <ShieldCheck className="h-3 w-3 text-amber-400" />
-            <span>{verification_label || t("concern.verification_required", "Human Verification Required")}</span>
+            <span>{t("concern.verification_required", "Human Verification Required")}</span>
           </span>
         )}
       </div>

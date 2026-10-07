@@ -40,62 +40,145 @@ class IncidentTools:
         uncertainties = incident_data.get("uncertainties", [])
         missing_info = incident_data.get("missing_information", [])
 
-        checklist = [
-            {
-                "id": "chk-loc",
-                "label": "Confirm Precise Geolocation & Safe Approach Route",
-                "category": "navigation",
-                "priority": "critical",
-                "instruction": "Verify cross-streets, mile-marker, and ensure emergency vehicles approach upwind and uphill."
-            },
-            {
-                "id": "chk-haz",
-                "label": "Establish Hazard Perimeter & Isolate Igniters",
-                "category": "safety",
-                "priority": "critical",
-                "instruction": "Maintain stand-off distance from visible smoke, fuel leaks, downed power lines, or compromised walls."
-            },
-            {
-                "id": "chk-cas",
-                "label": "Assess Casualty Count and Entrapment Status",
-                "category": "triage",
-                "priority": "high",
-                "instruction": "Visually confirm number of affected individuals and notify EMS dispatch before physical contact."
-            },
-            {
-                "id": "chk-acc",
-                "label": "Verify Secondary Blockages and Egress Corridors",
-                "category": "access",
-                "priority": "high",
-                "instruction": "Identify debris, stalled commuter traffic, or terrain obstacles hindering heavy rescue apparatus."
-            }
-        ]
+        is_te = any('\u0c00' <= char <= '\u0c7f' for char in str(incident_data.get("incident_summary", "")))
+        is_hi = any('\u0900' <= char <= '\u097f' for char in str(incident_data.get("incident_summary", "")))
+        lang = "te" if is_te else ("hi" if is_hi else "en")
+
+        if lang == "te":
+            checklist = [
+                {
+                    "id": "chk-loc",
+                    "label": "ఖచ్చితమైన భౌగోళిక స్థానం & సురక్షిత మార్గాన్ని నిర్ధారించండి",
+                    "category": "navigation",
+                    "priority": "critical",
+                    "instruction": "క్రాస్-స్ట్రీట్స్, మైలు-రాయిని ధృవీకరించండి మరియు వాహనాలు సురక్షిత దిశ నుండి చేరుకునేలా చూడండి."
+                },
+                {
+                    "id": "chk-haz",
+                    "label": "ప్రమాద పరిధిని గుర్తించి మండే వస్తువులను వేరుచేయండి",
+                    "category": "safety",
+                    "priority": "critical",
+                    "instruction": "పొగ, ఇంధన లీక్‌లు లేదా విద్యుత్ తీగల నుండి సురక్షిత దూరాన్ని పాటించండి."
+                },
+                {
+                    "id": "chk-cas",
+                    "label": "క్షతగాత్రుల సంఖ్య మరియు పరిస్థితిని అంచనా వేయండి",
+                    "category": "triage",
+                    "priority": "high",
+                    "instruction": "ప్రభావిత వ్యక్తుల సంఖ్యను పరిశీలించి అంబులెన్స్ విభాగానికి వెంటనే సమాచారం అందించండి."
+                },
+                {
+                    "id": "chk-acc",
+                    "label": "రహదారి అడ్డంకులు మరియు నిష్క్రమణ మార్గాలను తనిఖీ చేయండి",
+                    "category": "access",
+                    "priority": "high",
+                    "instruction": "రెస్క్యూ వాహనాలకు అడ్డంకిగా ఉన్న శిధిలాలు లేదా ట్రాఫిక్‌ను గుర్తించండి."
+                }
+            ]
+            cautions = [
+                "శిక్షణ లేని వ్యక్తులను అగ్నిప్రమాదం, నిర్మాణ నష్టం లేదా ప్రత్యక్ష విద్యుత్ తీగల వద్దకు వెళ్లనివ్వవద్దు.",
+                "తక్షణ విపత్తు ముప్పు (పేలుడు/మునిగిపోవడం) లేకపోతే క్షతగాత్రులను కదల్చవద్దు.",
+                "అన్ని చెక్‌లిస్ట్ అంశాలు నిర్ణయ మద్దతు కొరకు మాత్రమే మరియు మానవ ధృవీకరణ తప్పనిసరి."
+            ]
+            verification_notice = "అన్ని కార్యాచరణ నిర్ణయాలకు మానవ ధృవీకరణ తప్పనిసరి."
+        elif lang == "hi":
+            checklist = [
+                {
+                    "id": "chk-loc",
+                    "label": "सटीक भौगोलिक स्थिति एवं सुरक्षित पहुंच मार्ग की पुष्टि करें",
+                    "category": "navigation",
+                    "priority": "critical",
+                    "instruction": "क्रॉस-सड़कें, माइल-मार्कर सत्यापित करें और सुनिश्चित करें कि वाहन सुरक्षित दिशा से पहुंचे।"
+                },
+                {
+                    "id": "chk-haz",
+                    "label": "खतरे का दायरा तय करें और ज्वलनशील पदार्थों को अलग करें",
+                    "category": "safety",
+                    "priority": "critical",
+                    "instruction": "धुएं, ईंधन रिसाव अथवा बिजली के तारों से सुरक्षित दूरी बनाए रखें।"
+                },
+                {
+                    "id": "chk-cas",
+                    "label": "हताहतों की संख्या और स्थिति का आकलन करें",
+                    "category": "triage",
+                    "priority": "high",
+                    "instruction": "प्रभावित व्यक्तियों की संख्या की पुष्टि करें और राहत दल को तुरंत सूचित करें।"
+                },
+                {
+                    "id": "chk-acc",
+                    "label": "द्वितीयक बाधाओं और निकासी मार्गों की पुष्टि करें",
+                    "category": "access",
+                    "priority": "high",
+                    "instruction": "भारी बचाव वाहनों में बाधा डालने वाले मलबे अथवा जाम की पहचान करें।"
+                }
+            ]
+            cautions = [
+                "असुरक्षित व्यक्तियों को आग, संरचनात्मक क्षति या बिजली के तारों के पास न जाने दें।",
+                "जब तक तत्काल विस्फोट अथवा डूबने का खतरा न हो, घायलों को न हिलाएं।",
+                "चेकलिस्ट के सभी बिंदु केवल निर्णय सहायता के लिए हैं और मानवीय सत्यापन अनिवार्य है।"
+            ]
+            verification_notice = "सभी परिचालन निर्णयों के लिए मानवीय सत्यापन अनिवार्य है।"
+        else:
+            checklist = [
+                {
+                    "id": "chk-loc",
+                    "label": "Confirm Precise Geolocation & Safe Approach Route",
+                    "category": "navigation",
+                    "priority": "critical",
+                    "instruction": "Verify cross-streets, mile-marker, and ensure emergency vehicles approach upwind and uphill."
+                },
+                {
+                    "id": "chk-haz",
+                    "label": "Establish Hazard Perimeter & Isolate Igniters",
+                    "category": "safety",
+                    "priority": "critical",
+                    "instruction": "Maintain stand-off distance from visible smoke, fuel leaks, downed power lines, or compromised walls."
+                },
+                {
+                    "id": "chk-cas",
+                    "label": "Assess Casualty Count and Entrapment Status",
+                    "category": "triage",
+                    "priority": "high",
+                    "instruction": "Visually confirm number of affected individuals and notify EMS dispatch before physical contact."
+                },
+                {
+                    "id": "chk-acc",
+                    "label": "Verify Secondary Blockages and Egress Corridors",
+                    "category": "access",
+                    "priority": "high",
+                    "instruction": "Identify debris, stalled commuter traffic, or terrain obstacles hindering heavy rescue apparatus."
+                }
+            ]
+            cautions = [
+                "Do NOT instruct untrained bystanders to approach fire, structural damage, or live electrical lines.",
+                "Do NOT move injured occupants unless imminent catastrophic threat (explosion/submersion) exists.",
+                "All checklist items represent decision support suggestions and require human verification."
+            ]
+            verification_notice = "Required for all operational dispatches."
 
         # Add concern-specific checks
         for idx, concern in enumerate(potential_concerns):
+            verify_prefix = "పరిశీలించండి: " if lang == "te" else ("सत्यापित करें: " if lang == "hi" else "Verify ")
+            human_verify_suffix = ". మానవ ధృవీకరణ తప్పనిసరి." if lang == "te" else (". मानवीय सत्यापन अनिवार्य है।") if lang == "hi" else ". Human verification required."
             checklist.append({
                 "id": f"chk-concern-{idx}",
-                "label": f"Verify {concern.get('concern', 'Identified Concern')}",
+                "label": f"{verify_prefix}{concern.get('concern', 'Identified Concern')}",
                 "category": "incident_specific",
                 "priority": "high" if concern.get("confidence") == "high" else "medium",
-                "instruction": f"On-scene verification of: {concern.get('reason', 'Observable cue')}. Human verification required."
+                "instruction": f"{concern.get('reason', 'Observable cue')}{human_verify_suffix}"
             })
 
         # Add missing information verifications
         for idx, missing in enumerate(missing_info):
+            ascertain_prefix = "నిర్ధారించుకోవలసినది: " if lang == "te" else ("पता लगाएं: " if lang == "hi" else "Ascertain: ")
+            gather_instr = "సాధ్యమైతే ప్రత్యక్ష సాక్షుల నుండి లేదా పరిశీలన ద్వారా సేకరించండి." if lang == "te" else ("यदि सुरक्षित हो तो गवाहों से अथवा दृश्य निरीक्षण द्वारा जानकारी प्राप्त करें।") if lang == "hi" else "Gather from bystander interviews or visual inspection if safely possible."
             checklist.append({
                 "id": f"chk-missing-{idx}",
-                "label": f"Ascertain: {missing}",
+                "label": f"{ascertain_prefix}{missing}",
                 "category": "information_gap",
                 "priority": "medium",
-                "instruction": "Gather from bystander interviews or visual inspection if safely possible."
+                "instruction": gather_instr
             })
-
-        cautions = [
-            "Do NOT instruct untrained bystanders to approach fire, structural damage, or live electrical lines.",
-            "Do NOT move injured occupants unless imminent catastrophic threat (explosion/submersion) exists.",
-            "All checklist items represent decision support suggestions and require human verification."
-        ]
 
         return {
             "incident_id": incident_data.get("incident_id", "INC-CURRENT"),
@@ -103,7 +186,7 @@ class IncidentTools:
             "incident_type": incident_type,
             "checklist_items": checklist,
             "critical_cautions": cautions,
-            "human_verification_notice": "Required for all operational dispatches."
+            "human_verification_notice": verification_notice
         }
 
     @staticmethod
@@ -223,17 +306,11 @@ class IncidentTools:
         """
         Tool: translate_report
         Translates incident intelligence into Telugu ('te') or Hindi ('hi')
-        while strictly preserving epistemic uncertainty.
+        while strictly preserving epistemic uncertainty and preventing language prefix duplication.
         """
         from app.services.translation_service import translation_service
-        lex = translation_service.TRANSLATION_LEXICON.get(target_language, {})
         lang_name = translation_service.LANGUAGE_NAMES.get(target_language, target_language)
-        
-        translated = dict(incident_data)
-        orig_type = incident_data.get("incident_type", "")
-        if orig_type in lex:
-            translated["incident_type"] = lex[orig_type]
-        translated["incident_summary"] = f"[{lang_name}] " + incident_data.get("incident_summary", "")
+        translated = translation_service.translate_incident_sync(incident_data, target_language)
         
         return {
             "status": "success",

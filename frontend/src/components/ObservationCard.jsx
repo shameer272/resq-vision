@@ -8,19 +8,19 @@ export default function ObservationCard({ observation }) {
 
   const sourceConfig = {
     observed: {
-      label: source_label || t("obs.observed", "Observed (Visual)"),
+      label: t("obs.observed", "Observed (Visual)"),
       icon: Eye,
       badgeClass: "bg-cyan-950/80 text-cyan-300 border-cyan-800/60",
       iconColor: "text-cyan-400",
     },
     user_reported: {
-      label: source_label || t("obs.user_reported", "User Reported"),
+      label: t("obs.user_reported", "User Reported"),
       icon: User,
       badgeClass: "bg-purple-950/80 text-purple-300 border-purple-800/60",
       iconColor: "text-purple-400",
     },
     inferred: {
-      label: source_label || t("obs.inferred", "Inferred (Requires Verification)"),
+      label: t("obs.inferred", "Inferred (Requires Verification)"),
       icon: Sparkles,
       badgeClass: "bg-amber-950/80 text-amber-300 border-amber-800/60",
       iconColor: "text-amber-400",

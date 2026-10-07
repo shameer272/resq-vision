@@ -59,14 +59,8 @@ export default function LandingPage({ setActiveTab, onOpenApiKeyModal, systemSta
   return (
     <div className="space-y-16 pb-16">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 md:pt-20">
+      <section className="relative overflow-hidden pt-8 md:pt-16">
         <div className="mx-auto max-w-5xl text-center px-4">
-          {/* Hackathon Badge */}
-          <div className="inline-flex items-center space-x-2 rounded-full border border-red-800/80 bg-red-950/50 px-4 py-1.5 text-xs font-semibold text-red-300 mb-6 shadow-inner">
-            <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-            <span>{t("landing.badge", "Hacktoberfest Hack Day Hyderabad × NIAT • Challenge: Best Use of Gemma 4")}</span>
-          </div>
-
           {/* Title */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-6">
             {t("landing.hero_title_1", "RESQ")}{" "}

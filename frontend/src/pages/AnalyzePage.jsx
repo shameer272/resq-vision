@@ -37,6 +37,25 @@ import {
 } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
 
+function stripLanguagePrefixes(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/^\s*(\[(?:Telugu|Hindi|English|te|hi|en)[^\]]*\]\s*)+/gi, "").trim();
+}
+
+function sanitizeIncidentData(obj) {
+  if (!obj) return obj;
+  if (typeof obj === "string") return stripLanguagePrefixes(obj);
+  if (Array.isArray(obj)) return obj.map(sanitizeIncidentData);
+  if (typeof obj === "object") {
+    const clean = {};
+    for (const [key, val] of Object.entries(obj)) {
+      clean[key] = sanitizeIncidentData(val);
+    }
+    return clean;
+  }
+  return obj;
+}
+
 export default function AnalyzePage({
   selectedLanguage: propLanguage,
   setSelectedLanguage: propSetLanguage,
@@ -62,7 +81,27 @@ export default function AnalyzePage({
   // Pipeline states
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState(null);
-  const [incidentResult, setIncidentResult] = useState(null);
+
+  // Canonical analysis result (English source of truth, never mutated on language switch)
+  const [canonicalResult, setCanonicalResult] = useState(null);
+  // Cache of translations: { en: canonicalResult, te: ..., hi: ... }
+  const [translationsCache, setTranslationsCache] = useState({});
+
+  const updateCanonicalResult = (raw) => {
+    if (!raw) {
+      setCanonicalResult(null);
+      setTranslationsCache({});
+      return;
+    }
+    const clean = sanitizeIncidentData(raw);
+    setCanonicalResult(clean);
+    setTranslationsCache({ en: clean });
+  };
+
+  // Derived displayed result: canonicalResult for English or cached translation for target language
+  const displayedResult =
+    (selectedLanguage === "en" ? canonicalResult : translationsCache[selectedLanguage]) ||
+    canonicalResult;
 
   // Modals & Tools
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -80,6 +119,41 @@ export default function AnalyzePage({
   // SpeechSynthesis voice output
   const [isSpeaking, setIsSpeaking] = useState(false);
 
+  // Auto-translate or switch translation when selectedLanguage changes or canonicalResult changes
+  React.useEffect(() => {
+    if (!canonicalResult) return;
+    if (selectedLanguage === "en") return;
+    if (translationsCache[selectedLanguage]) return;
+
+    let isCancelled = false;
+    const runTranslation = async () => {
+      try {
+        setTranslating(true);
+        // CRITICAL: Always translate from canonicalResult, never from an already-translated object!
+        const res = await translateIncident(canonicalResult, selectedLanguage);
+        if (!isCancelled && res?.translated_content) {
+          const clean = sanitizeIncidentData(res.translated_content);
+          setTranslationsCache((prev) => ({
+            ...prev,
+            [selectedLanguage]: clean,
+          }));
+        }
+      } catch (err) {
+        console.error("Auto-translation failed:", err);
+      } finally {
+        if (!isCancelled) {
+          setTranslating(false);
+        }
+      }
+    };
+
+    runTranslation();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [selectedLanguage, canonicalResult, translationsCache]);
+
   // Load preloaded demo scenario if passed
   React.useEffect(() => {
     if (preloadedScenario) {
@@ -87,6 +161,11 @@ export default function AnalyzePage({
       setVoiceTranscript(preloadedScenario.voice_transcript || "");
       setLocation(preloadedScenario.location || "");
       setCategory(preloadedScenario.category ? preloadedScenario.category.toLowerCase().replace(/[^a-z]/g, "_") : "auto");
+
+      // If preloaded scenario has analysis results, load into canonicalResult
+      if (preloadedScenario.incident_summary && preloadedScenario.observations) {
+        updateCanonicalResult(preloadedScenario);
+      }
 
       // Load sample image
       if (preloadedScenario.sample_image_url) {
@@ -126,7 +205,7 @@ export default function AnalyzePage({
       if (voiceTranscript) formData.append("voice_transcript", voiceTranscript);
       if (location) formData.append("location", location);
       if (category && category !== "auto") formData.append("category", category);
-      formData.append("language", selectedLanguage || "en");
+      formData.append("language", "en"); // Always generate canonical English result
 
       let result;
       if (selectedFiles.length === 1) {
@@ -137,7 +216,7 @@ export default function AnalyzePage({
         result = await analyzeMultiImage(formData);
       }
 
-      setIncidentResult(result);
+      updateCanonicalResult(result);
     } catch (err) {
       console.error("[Analysis Error]", err);
       setAnalysisError(err.message || "Incident analysis failed.");
@@ -148,10 +227,10 @@ export default function AnalyzePage({
 
   // Tool: Generate Report
   const handleGenerateReport = async () => {
-    if (!incidentResult) return;
+    if (!displayedResult) return;
     try {
       setGeneratingReport(true);
-      const rep = await generateReport(incidentResult);
+      const rep = await generateReport(displayedResult);
       setReportData(rep);
       setIsReportOpen(true);
     } catch (err) {
@@ -163,10 +242,10 @@ export default function AnalyzePage({
 
   // Tool: Generate Checklist
   const handleGenerateChecklist = async () => {
-    if (!incidentResult) return;
+    if (!displayedResult) return;
     try {
       setGeneratingChecklist(true);
-      const chk = await generateChecklist(incidentResult);
+      const chk = await generateChecklist(displayedResult);
       setChecklistData(chk);
       setIsChecklistOpen(true);
     } catch (err) {
@@ -176,27 +255,17 @@ export default function AnalyzePage({
     }
   };
 
-  // Tool: Translate Report
-  const handleTranslate = async (targetLang) => {
-    if (!incidentResult) return;
-    try {
-      setTranslating(true);
-      const res = await translateIncident(incidentResult, targetLang);
-      setIncidentResult(res.translated_content);
-      setSelectedLanguage(targetLang);
-    } catch (err) {
-      alert("Translation failed: " + err.message);
-    } finally {
-      setTranslating(false);
-    }
+  // Tool: Translate Report (switches global language and derives translation)
+  const handleTranslate = (targetLang) => {
+    setSelectedLanguage(targetLang);
   };
 
   // Tool: Download PDF
   const handleDownloadPdf = async () => {
-    if (!incidentResult) return;
+    if (!displayedResult) return;
     try {
       setExportingPdf(true);
-      await exportPdf(incidentResult);
+      await exportPdf(displayedResult);
     } catch (err) {
       alert("PDF download failed: " + err.message);
     } finally {
@@ -217,13 +286,13 @@ export default function AnalyzePage({
       return;
     }
 
-    if (!incidentResult) return;
+    if (!displayedResult) return;
 
     // Build concise, safety-checked verbal speech string
     const speechText = [
-      `Emergency situation summary: ${incidentResult.incident_summary}.`,
-      incidentResult.potential_concerns?.length
-        ? `Identified potential concerns: ${incidentResult.potential_concerns.map((c) => c.concern).join(". ")}.`
+      `Emergency situation summary: ${displayedResult.incident_summary}.`,
+      displayedResult.potential_concerns?.length
+        ? `Identified potential concerns: ${displayedResult.potential_concerns.map((c) => c.concern).join(". ")}.`
         : "",
       "Human verification required by on-scene personnel.",
     ].join(" ");
@@ -456,14 +525,14 @@ export default function AnalyzePage({
       {/* ========================================================== */}
       {/* RESULTS DASHBOARD */}
       {/* ========================================================== */}
-      {incidentResult && (
+      {displayedResult && (
         <div className="space-y-6 pt-4 border-t border-slate-800">
           {/* Action Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
             <div className="flex items-center space-x-2">
               <span className="text-xs font-bold text-slate-300">{t("analyze.tools_label", "Incident Tools:")}</span>
               <span className="text-[10px] font-mono text-slate-500">
-                ID: {incidentResult.incident_id}
+                ID: {displayedResult.incident_id}
               </span>
             </div>
 
@@ -483,25 +552,25 @@ export default function AnalyzePage({
 
               {/* Translate dropdown */}
               <div className="flex items-center rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200">
-                <Languages className="h-3.5 w-3.5 mr-1.5 text-slate-400" />
+                <Languages className={`h-3.5 w-3.5 mr-1.5 ${translating ? "animate-spin text-red-400" : "text-slate-400"}`} />
                 <button
                   onClick={() => handleTranslate("te")}
                   disabled={translating}
-                  className="hover:text-red-400 pr-1.5 border-r border-slate-700"
+                  className={`hover:text-red-400 pr-1.5 border-r border-slate-700 transition-colors ${selectedLanguage === "te" ? "text-red-400 font-bold" : ""}`}
                 >
                   తెలుగు
                 </button>
                 <button
                   onClick={() => handleTranslate("hi")}
                   disabled={translating}
-                  className="hover:text-red-400 px-1.5 border-r border-slate-700"
+                  className={`hover:text-red-400 px-1.5 border-r border-slate-700 transition-colors ${selectedLanguage === "hi" ? "text-red-400 font-bold" : ""}`}
                 >
                   हिन्दी
                 </button>
                 <button
                   onClick={() => handleTranslate("en")}
                   disabled={translating}
-                  className="hover:text-red-400 pl-1.5"
+                  className={`hover:text-red-400 pl-1.5 transition-colors ${selectedLanguage === "en" ? "text-red-400 font-bold" : ""}`}
                 >
                   EN
                 </button>
@@ -556,19 +625,19 @@ export default function AnalyzePage({
             <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded bg-red-950/80 border border-red-800/60 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-red-300">
-                  {incidentResult.incident_type?.replace(/_/g, " ")}
+                  {t(`types.${displayedResult.incident_type}`, displayedResult.incident_type?.replace(/_/g, " "))}
                 </span>
                 <div className="flex items-center space-x-1.5 text-xs text-slate-300 font-mono bg-slate-950/60 border border-slate-800 px-2.5 py-0.5 rounded">
                   <span className="text-slate-400">{t("analyze.analysis_engine", "Analysis Engine:")}</span>
-                  <span className={incidentResult.fallback_used ? "text-amber-400 font-semibold" : "text-blue-400 font-semibold"}>
-                    {incidentResult.model_used || "gemma-4-31b-it"}
+                  <span className={displayedResult.fallback_used ? "text-amber-400 font-semibold" : "text-blue-400 font-semibold"}>
+                    {displayedResult.model_used || "gemma-4-31b-it"}
                   </span>
-                  {incidentResult.fallback_used ? (
+                  {displayedResult.fallback_used ? (
                     <span 
                       className="ml-1 rounded bg-amber-950/90 border border-amber-700/80 px-1.5 py-0.2 text-[10px] text-amber-300 font-sans font-medium"
-                      title={incidentResult.fallback_reason || "Switched to fallback model due to transient capacity error on primary model"}
+                      title={displayedResult.fallback_reason || "Switched to fallback model due to transient capacity error on primary model"}
                     >
-                      ⚠️ {t("analyze.fallback_model", "Fallback")} (Primary: {incidentResult.primary_model || "gemma-4-31b-it"})
+                      ⚠️ {t("analyze.fallback_model", "Fallback")} (Primary: {displayedResult.primary_model || "gemma-4-31b-it"})
                     </span>
                   ) : (
                     <span className="ml-1 rounded bg-blue-950/80 border border-blue-700/60 px-1.5 py-0.2 text-[10px] text-blue-300 font-sans font-medium">
@@ -583,13 +652,13 @@ export default function AnalyzePage({
             </div>
 
             <h2 className="text-lg sm:text-xl font-bold text-white mb-2 leading-relaxed">
-              {incidentResult.incident_summary}
+              {displayedResult.incident_summary}
             </h2>
 
             {/* Safety Disclaimer Banner */}
             <div className="mt-4 rounded-xl border border-red-900/60 bg-red-950/30 p-3 text-xs text-red-300 leading-relaxed">
               <strong>{t("analyze.mandatory_verification", "MANDATORY HUMAN VERIFICATION: ")}</strong>
-              {incidentResult.safety_disclaimer}
+              {displayedResult.safety_disclaimer}
             </div>
           </div>
 
@@ -600,11 +669,11 @@ export default function AnalyzePage({
                 {t("analyze.heading_observations", "Evidence-Linked Observations (Data Provenance)")}
               </h3>
               <span className="text-xs text-slate-400">
-                {incidentResult.observations?.length || 0} {t("analyze.points_identified", "Points Identified")}
+                {displayedResult.observations?.length || 0} {t("analyze.points_identified", "Points Identified")}
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {incidentResult.observations?.map((obs, idx) => (
+              {displayedResult.observations?.map((obs, idx) => (
                 <ObservationCard key={idx} observation={obs} />
               ))}
             </div>
@@ -617,11 +686,11 @@ export default function AnalyzePage({
                 {t("analyze.heading_concerns", "Potential Safety Hazards & Concerns")}
               </h3>
               <span className="text-xs text-slate-400">
-                {incidentResult.potential_concerns?.length || 0} {t("analyze.operational_hazards", "Operational Hazards")}
+                {displayedResult.potential_concerns?.length || 0} {t("analyze.operational_hazards", "Operational Hazards")}
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {incidentResult.potential_concerns?.map((c, idx) => (
+              {displayedResult.potential_concerns?.map((c, idx) => (
                 <ConcernCard key={idx} concernItem={c} />
               ))}
             </div>
@@ -636,7 +705,7 @@ export default function AnalyzePage({
                 <span>{t("analyze.heading_uncertainties", "Epistemic Uncertainties (Cannot Determine from Image)")}</span>
               </div>
               <ul className="space-y-1.5 text-xs text-slate-400 list-disc list-inside">
-                {incidentResult.uncertainties?.map((u, i) => (
+                {displayedResult.uncertainties?.map((u, i) => (
                   <li key={i}>{u}</li>
                 ))}
               </ul>
@@ -649,7 +718,7 @@ export default function AnalyzePage({
                 <span>{t("analyze.heading_missing_info", "Information Gaps Needed for Dispatchers")}</span>
               </div>
               <ul className="space-y-1.5 text-xs text-slate-400 list-disc list-inside">
-                {incidentResult.missing_information?.map((m, i) => (
+                {displayedResult.missing_information?.map((m, i) => (
                   <li key={i}>{m}</li>
                 ))}
               </ul>
@@ -657,14 +726,14 @@ export default function AnalyzePage({
           </div>
 
           {/* RAG Knowledge Base Citations */}
-          {incidentResult.rag_sources?.length > 0 && (
+          {displayedResult.rag_sources?.length > 0 && (
             <div className="rounded-xl border border-blue-900/50 bg-blue-950/20 p-4">
               <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-blue-300 mb-3">
                 <BookOpen className="h-4 w-4 text-blue-400" />
                 <span>{t("analyze.heading_rag_citations", "Curated RAG Knowledge Base Citations (Verified Safety Protocols)")}</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {incidentResult.rag_sources.map((src, i) => (
+                {displayedResult.rag_sources.map((src, i) => (
                   <div
                     key={i}
                     className="rounded-lg border border-slate-800 bg-slate-950/60 p-3"
@@ -684,8 +753,8 @@ export default function AnalyzePage({
 
           {/* Audit Trail & Processing Pipeline */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <ActionTrace steps={incidentResult.action_trace} />
-            <Timeline events={incidentResult.timeline} />
+            <ActionTrace steps={displayedResult.action_trace} />
+            <Timeline events={displayedResult.timeline} />
           </div>
         </div>
       )}
@@ -695,7 +764,7 @@ export default function AnalyzePage({
         isOpen={isReportOpen}
         onClose={() => setIsReportOpen(false)}
         reportData={reportData}
-        incidentData={incidentResult}
+        incidentData={displayedResult}
       />
 
       <ChecklistModal
