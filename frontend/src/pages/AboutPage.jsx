@@ -4,11 +4,6 @@ import {
   Cpu,
   Layers,
   ShieldCheck,
-  FileText,
-  AlertTriangle,
-  Globe,
-  ExternalLink,
-  Code2,
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
@@ -91,9 +86,9 @@ export default function AboutPage() {
           <ul className="space-y-2 text-xs text-slate-400">
             <li>• <strong>Frontend:</strong> React + Vite + Tailwind CSS + Lucide Icons + Recharts</li>
             <li>• <strong>Backend:</strong> FastAPI + Python 3.12 + Pydantic v2 + ReportLab</li>
-            <li>• <strong>AI Layer:</strong> Gemma 4 (31B-IT / 26B-A4B-IT) via Google GenAI SDK</li>
+            <li>• <strong>AI Layer:</strong> Dual-Provider Support: Google Gemma 4 (31B-IT / 26B-A4B-IT) & DigitalOcean GenAI Serverless Inference (Llama-3.2-11B-Vision)</li>
             <li>• <strong>RAG Engine:</strong> Local verified safety knowledge base (NHTSA, FEMA, NDMA, NOAA)</li>
-            <li>• <strong>Zero Client Secret Exposure:</strong> Gemini API keys remain strictly server-side</li>
+            <li>• <strong>Zero Client Secret Exposure:</strong> Model credentials remain strictly server-side</li>
           </ul>
         </div>
 

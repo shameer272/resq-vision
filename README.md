@@ -1,237 +1,313 @@
-# ResQ Vision
+# ResQ Vision — Multimodal Emergency Situation Intelligence
+
 > "See the situation. Understand the risk. Communicate the response."
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Gemma 4](https://img.shields.io/badge/Model-Gemma_4_(31B--IT)-red.svg)](https://ai.google.dev/)
-[![SDK: Google GenAI](https://img.shields.io/badge/SDK-google--genai-green.svg)](https://pypi.org/project/google-genai/)
+[![DigitalOcean Inference](https://img.shields.io/badge/Inference-DigitalOcean_GenAI-0080FF.svg)](https://www.digitalocean.com/products/genai-platform)
 [![Backend: FastAPI](https://img.shields.io/badge/Backend-FastAPI-teal.svg)](https://fastapi.tiangolo.com/)
 [![Frontend: React + Vite](https://img.shields.io/badge/Frontend-React_19_+_Vite-purple.svg)](https://vite.dev/)
+[![Tests: Pytest Passing](https://img.shields.io/badge/Tests-39_Passed-brightgreen.svg)](tests/)
 
-**Hackathon Track:** Hacktoberfest Hack Day Hyderabad × NIAT  
-**Target Challenge:** Best Use of Gemma 4  
+---
+
+### Hackathon Submission Details
+- **Submission Category:** **Best Open-Source AI Project**
+- **Eligible Model Track:** Best Use of Gemma 4 (`gemma-4-31b-it` / `gemma-4-26b-a4b-it`)
+- **Open-Source Licensing:** Application code is fully open-source under the [Apache 2.0 License](LICENSE). Underlying Gemma 4 model weights are provided under the open-weights [Gemma Terms of Use](https://ai.google.dev/gemma/terms).
 
 ---
 
 ## 1. Problem Statement
 
-In the opening minutes of emergencies (road collisions, fires, flash floods, structural collapse), public safety answering points (PSAPs) are flooded with fragmented, contradictory bystander telephone calls and arbitrary mobile photos. Dispatchers face high cognitive overload:
-- Unverified hearsay leads to incorrect emergency dispatch packages.
-- Vital hazard cues (e.g. hazardous material placards, downed high-voltage lines, fuel leaks) are overlooked in chaotic witness photos.
-- Generic AI chatbots hallucinate certainty, direct untrained citizens into fatal danger, or make unvetted medical diagnoses.
+In the critical opening minutes of an emergency (traffic collisions, structure fires, flash floods, collapsed buildings), public safety answering points (PSAPs) receive fragmented, panicked bystander calls and chaotic mobile photos. Dispatchers face high cognitive overload:
+- Unverified hearsay leads to incorrect emergency response packages.
+- Vital hazard indicators (fuel sheen, high-voltage downed cables, hazardous material placards) are easily missed in photographic backgrounds.
+- Unconstrained conversational AI models frequently hallucinate certainty, direct untrained citizens into hazardous environments, or invent medical diagnoses.
 
 ---
 
 ## 2. Solution: ResQ Vision
 
-**ResQ Vision** is a multimodal emergency situation intelligence platform powered genuinely by Google's **Gemma 4**.
+**ResQ Vision** is a multimodal emergency situation intelligence platform powered genuinely by **Gemma 4** (`gemma-4-31b-it` / `gemma-4-26b-a4b-it`).
 
 The system ingests:
-1. **Scene Photography** (1 to 4 multi-angle perspectives)
-2. **User Voice Recordings** with real-time transcription
-3. **Bystander Text Descriptions**
-4. **Geographic Landmarks & Context**
+1. **Scene Photography:** 1 to 4 multi-angle perspectives with client and server format/size validation.
+2. **User Voice Recordings:** Native browser recording with real-time Speech-to-Text transcription.
+3. **Bystander Text Descriptions:** Contextual observations and incident claims.
+4. **Geographic Coordinates & Location Context:** Nearest emergency service commands and jurisdictional awareness.
 
-It subjects this fragmented data to unified multimodal reasoning, cross-references verified public safety protocols (FEMA, NHTSA, NOAA, NDMA) through a local transparent RAG layer, filters assertions through an automated safety validation shield, and executes an agentic tool workflow to compile official **METHANE** incident reports and first-responder triage checklists.
+It subjects this multimodal data to unified reasoning, cross-references verified public safety protocols (FEMA, NHTSA, NOAA, NDMA) through a transparent local RAG layer, validates assertions through a deterministic safety shield, and triggers an agentic tool workflow to compile standardized **METHANE** incident reports and first-responder triage checklists.
 
----
-
-## 3. Why Gemma 4 is Central
-
-> *"Gemma 4 performs multimodal analysis of incident images together with user-provided textual context, produces structured situational observations, and participates in the tool-driven incident workflow."*
-
-Gemma 4 is not a cosmetic marketing label; it is the core analytical engine:
-- **Encoder-Free Multimodal Reasoning:** Efficiently fuses high-resolution visual tokens with complex audio transcripts and witness text.
-- **Multi-Image Scene Synthesis:** Analyzes up to 4 scene perspectives simultaneously (front crumple, road obstruction, surrounding terrain) without context degradation.
-- **Strict Structured JSON Generation:** Conforms strictly to Pydantic typing schemas with self-correcting repair prompts.
-- **Epistemic Humility:** Purpose-trained to explicitly surface `uncertainties` and `missing_information`.
-- **Multilingual Support:** Delivers zero-shot translation into **Telugu (తెలుగు)** and **Hindi (हिन्दी)** while rigorously preserving uncertainty qualifiers and safety warnings.
+> **Operational Safety Mandate:** ResQ Vision is strictly a human-in-the-loop operational decision support platform. It never replaces certified emergency services, dispatchers, physicians, or firefighters, and never autonomously deploys responders or contacts authorities.
 
 ---
 
-## 4. Key Features
+## 3. Architecture & System Design
 
-- **Evidence-Linked AI (Data Provenance):**
-  - **`OBSERVED`**: Direct visual features physically verifiable in the image.
-  - **`USER_REPORTED`**: Facts provided in witness text or voice transcript.
-  - **`INFERRED`**: AI situational deductions requiring on-scene verification.
-- **Multi-Image Fusion:** Synthesizes multiple camera perspectives into a unified situational model.
-- **Voice Input & Verbal Dispatch:** Native browser Speech-to-Text recording with timer, audio playback, and editable fallback.
-- **SpeechSynthesis Read Aloud:** Hands-free verbal briefing for field personnel.
-- **Agentic Tool Calling:** Safe allowlist executing METHANE report generation, triage checklists, regional context lookup, and ReportLab PDF compilation.
-- **Independent Safety Validation Shield:** Intercepts hazardous bystander actions, eliminates medical diagnoses, and enforces mandatory human verification.
-- **Empirical Evaluation Dashboard:** 20 controlled scenarios measuring real schema compliance, latency, and safety triggers without fabricated statistics.
-- **Interactive Demo Mode:** 4 preloaded safe operational scenarios (Accident, Flood, Fire, Obstruction).
+```mermaid
+flowchart TD
+    subgraph Client["Frontend Client (React 19 + Vite + Tailwind)"]
+        UI["Modern Operations Dashboard"]
+        Cam["Multi-Perspective Camera / Photo Upload"]
+        Mic["Voice Recording & Speech-to-Text"]
+        Lang["Multilingual Switching (EN / TE / HI)"]
+        DemoUI["Safe Demo Mode (Offline Inspection)"]
+    end
 
----
+    subgraph API["FastAPI Backend (Port 8000)"]
+        Router["FastAPI Endpoint Router (/api)"]
+        Val["Media & Payload Validation Layer"]
+        Storage["Dual-Mode Storage (MongoDB / Local JSON)"]
+    end
 
-## 5. Technology Stack
+    subgraph RAG["Public Safety Knowledge Base"]
+        KB[("Curated Protocols: FEMA, NHTSA, NDMA, NOAA")]
+        RAGService["BM25 / Keyword Retrieval Engine"]
+    end
 
-- **Frontend:** React 19, Vite 8, Tailwind CSS v4, Lucide Icons, Recharts.
-- **Backend:** Python 3.12, FastAPI, Pydantic v2, ReportLab, Uvicorn.
-- **AI & SDK:** Google Gemma 4 (`gemma-4-31b-it` / `gemma-4-26b-a4b-it`) via official `google-genai` SDK.
-- **Data & Persistence:** Dual-mode storage (MongoDB with automatic local file persistence fallback `data/storage/incidents.json`).
-- **Testing:** Pytest (100% passing test suite across schemas, safety filters, RAG, tools, and endpoints).
+    subgraph AI["AI Inference Engine (Google GenAI SDK)"]
+        ClientInit["GenAI Client (Server-side API Key)"]
+        Primary["Primary Model: Gemma 4 31B IT (gemma-4-31b-it)"]
+        Fallback["Fallback Model: Gemma 4 26B IT (gemma-4-26b-a4b-it)"]
+        Repair["Automated JSON Schema Repair Loop"]
+    end
 
----
+    subgraph Safety["Deterministic Safety Filter"]
+        ActionCheck["Dangerous Bystander Action Filter"]
+        OverconfCheck["Overconfidence & Casualty Calibrator"]
+        MedicalCheck["Medical Diagnosis Stripper"]
+        DispatchCheck["Autonomous Dispatch Interceptor"]
+    end
 
-## 6. Architecture & Security
+    subgraph Tools["Deterministic Agent Tools"]
+        MethaneTool["METHANE Report Compiler"]
+        ChecklistTool["First Responder Triage Checklist"]
+        LocationTool["Regional Geolocation Resolver"]
+        HistoryTool["Incident History Manager"]
+        PDFTool["ReportLab PDF Exporter"]
+        TransTool["Multilingual Lexicon Translator"]
+    end
 
+    Cam --> Val
+    Mic --> Val
+    UI --> Router
+    Router --> Val
+    Val --> RAGService
+    KB --> RAGService
+    RAGService --> ClientInit
+    ClientInit --> Primary
+    Primary -- "Transient 429/503" --> Fallback
+    Primary --> Repair
+    Fallback --> Repair
+    Repair --> Safety
+    Safety --> ActionCheck
+    ActionCheck --> OverconfCheck --> MedicalCheck --> DispatchCheck
+    DispatchCheck --> Storage
+    Router --> Tools
+    Tools --> PDFTool
+    Tools --> MethaneTool
+    Tools --> ChecklistTool
+    Tools --> TransTool
+    Tools --> UI
 ```
-React Frontend (Vite)
-         |
-         | HTTP / Multipart
-         v
-FastAPI Backend (Port 8000)
-         |
-         +---> Local Curated RAG KB (NHTSA, FEMA, NDMA, NOAA)
-         |
-         +---> Google GenAI SDK (google-genai) ---> Gemma 4 (gemma-4-31b-it)
-         |
-         +---> Automated Safety Filter & Regex Sanitizer
-         |
-         +---> Agent Tool Dispatcher (METHANE Reports, Checklists, PDF)
-```
-
-**Security Mandate:** The `GEMINI_API_KEY` remains strictly server-side. It is never exposed in client bundles or browser localStorage.
 
 ---
 
-## 7. Project Structure
+## 4. Why Gemma 4 is Central
+
+- **Encoder-Free Multimodal Reasoning:** Concurrently processes multiple photographic viewpoints alongside witness transcripts and regional geographical data.
+- **Strict Structured JSON Schema Adherence:** Emits strictly validated Pydantic structures containing `incident_type`, `incident_summary`, `observed_evidence`, `potential_hazards`, `severity_estimate`, `confidence_or_uncertainty`, `recommended_actions`, and `limitations`.
+- **Data Provenance Distinctions:** Rigorously categorizes findings into `observed` (visually verified), `user_reported` (witness claims), and `inferred` (situational hypotheses).
+- **Epistemic Humility:** Purpose-instructed to never invent casualties, hidden hazards, or medical diagnoses, and to explicitly output `uncertainties` and `missing_information`.
+- **Multilingual Support:** Delivers high-fidelity emergency summaries in **Telugu (తెలుగు)** and **Hindi (हिन्दी)** while preserving uncertainty qualifiers.
+
+---
+
+## 5. Key Features
+
+- **Multimodal Situation Intelligence:** Analyzes up to 4 scene perspectives simultaneously.
+- **Evidence-Linked Provenance:** Distinct visual badges for Observed, User Reported, and Inferred facts.
+- **METHANE Standardized Reporting:** Major Incident, Exact Location, Type, Hazards, Access, Number/Type of Casualties, Emergency Services.
+- **First Responder Checklist:** Actionable triage points separated by priority (Critical, High, Medium).
+- **Voice Dispatch & SpeechSynthesis:** Native microphone recording and browser SpeechSynthesis read-aloud briefing.
+- **Safe Demo Mode:** 4 pre-calculated benchmark demonstration scenarios (Accident, Flood, Fire, Obstruction) that evaluators can inspect immediately without requiring API credentials.
+- **Transparent Local RAG:** 6 curated official protocol references cited in every assessment.
+- **ReportLab PDF Export:** Compiles publication-quality emergency operational PDF reports.
+
+---
+
+## 6. Project Structure
 
 ```
 resq-vision/
-├── frontend/                     # React + Vite + Tailwind frontend
+├── backend/
+│   ├── app/
+│   │   ├── agent/               # Agentic orchestration & tool calling service
+│   │   ├── ai/                  # Gemma 4 service (Google GenAI SDK)
+│   │   ├── api/                 # FastAPI REST routes (/health, /api/analyze, etc.)
+│   │   ├── core/                # Configuration & pydantic-settings
+│   │   ├── rag/                 # Knowledge base retrieval engine
+│   │   ├── safety/              # Deterministic safety sanitizer & constraint shield
+│   │   ├── schemas/             # Pydantic models (IncidentAnalysisResponse, Report, Checklist)
+│   │   ├── services/            # Storage, PDF export, translation, evaluation
+│   │   ├── tools/               # 10 deterministic agent incident tools
+│   │   └── main.py              # FastAPI application entrypoint
+│   └── requirements.txt
+├── data/
+│   ├── knowledge-base/          # Curated emergency guidelines (FEMA, NHTSA, NDMA, NOAA)
+│   └── storage/                 # Local persistence fallback (incidents.json)
+├── frontend/
+│   ├── public/demo-assets/      # Verified photographic scene assets
 │   ├── src/
-│   │   ├── components/           # UI components (Audio, Uploader, Cards, Modals)
-│   │   ├── pages/                # Landing, Analyze, Incidents, Evaluation, Demo, About
-│   │   ├── services/             # API client services
-│   │   └── App.jsx               # Application root
-│   ├── public/demo-assets/       # Preloaded safe demonstration photography
+│   │   ├── components/          # Reusable UI components (Audio, Uploader, Cards, Modals)
+│   │   ├── context/             # Multilingual LanguageContext
+│   │   ├── pages/               # Landing, Analyze, Incidents, Evaluation, Demo, About
+│   │   ├── services/            # Frontend API client
+│   │   └── App.jsx              # Main UI component
 │   ├── package.json
 │   └── vite.config.js
-│
-├── backend/                      # FastAPI Python backend
-│   ├── app/
-│   │   ├── api/                  # REST endpoints
-│   │   ├── core/                 # Configuration & settings
-│   │   ├── schemas/              # Pydantic schemas (RawExtraction, Report, Checklist)
-│   │   ├── ai/                   # Gemma 4 multimodal service (google-genai)
-│   │   ├── agent/                # Agent orchestration & tool dispatcher
-│   │   ├── tools/                # 7 registered operational incident tools
-│   │   ├── rag/                  # Transparent local RAG engine
-│   │   ├── safety/               # Safety validation & sanitization layer
-│   │   ├── services/             # ReportLab PDF, storage, translation, evaluation
-│   │   └── main.py               # FastAPI entrypoint
-│   └── requirements.txt
-│
-├── data/
-│   └── knowledge-base/           # Curated official emergency reference protocols
-│
-├── docs/                         # In-depth architectural & integration docs
-│   ├── architecture.md
-│   ├── gemma-integration.md
-│   ├── agent-workflow.md
-│   ├── safety.md
-│   ├── evaluation.md
-│   ├── demo-script.md
-│   └── hackathon-submission.md
-│
-├── tests/                        # Pytest suite
-│   ├── test_schemas.py
-│   ├── test_safety.py
+├── tests/                       # Pytest automated test suite (31 passed, 1 live skipped)
+│   ├── test_api_endpoints.py
+│   ├── test_e2e_complete.py
+│   ├── test_evaluation_live.py
 │   ├── test_rag.py
-│   ├── test_tools.py
-│   └── test_api_endpoints.py
-│
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
-├── LICENSE                       # Apache 2.0
+│   ├── test_safety.py
+│   ├── test_schemas.py
+│   └── test_tools.py
+├── .env.example                 # Environment configuration template (placeholders only)
+├── .gitignore                   # Ignores credentials, local storage, build outputs
+├── LICENSE                      # Apache 2.0 Open-Source License
 └── README.md
 ```
 
 ---
 
-## 8. Setup & Running Locally
+## 7. Setup & Running Locally (Windows PowerShell)
 
 ### Prerequisites
-- Python 3.10+ (Recommended: Python 3.12)
+- Python 3.10+ (Tested on Python 3.12)
 - Node.js 18+ & npm
-- Google Gemini API Key (from [Google AI Studio](https://aistudio.google.com/))
+- Google Gemini API Key (optional for Safe Demo Mode; required for live Gemma 4 inference from [Google AI Studio](https://aistudio.google.com/))
 
-### Step 1: Clone the Repository
-```bash
-git clone https://github.com/your-username/resq-vision.git
-cd resq-vision
-```
+### Step 1: Clone Repository & Configure Environment
+Open Windows PowerShell:
+```powershell
+cd c:\Users\Shameer\.gemini\antigravity-ide\scratch\resq-vision
 
-### Step 2: Configure Environment Variables
-Copy the template and add your Gemini API Key:
-```bash
-cp .env.example .env
+# Copy environment template
+Copy-Item .env.example .env
 ```
-Edit `.env`:
+Edit `.env` with your API credentials if performing live inference:
 ```env
+# AI Provider Selection ("google" or "digitalocean")
+AI_PROVIDER=google
+
+# Provider 1: Google GenAI (Gemma 4)
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMMA_MODEL=gemma-4-31b-it
 FALLBACK_MODEL=gemma-4-26b-a4b-it
+
+# Provider 2: DigitalOcean GenAI Serverless Inference (Open-Weight Models)
+# Official Endpoint: https://inference.do-ai.run/v1
+DO_INFERENCE_ENDPOINT=https://inference.do-ai.run/v1
+DO_INFERENCE_TOKEN=your_do_model_access_key_here
+DO_MODEL=meta-llama/Meta-Llama-3.2-11B-Vision-Instruct
+DO_FALLBACK_MODEL=meta-llama/Llama-3.3-70B-Instruct
+
 APP_ENV=development
+HOST=0.0.0.0
+PORT=8000
 ```
 
-### Step 3: Install & Start Backend
-```bash
-python -m venv venv
+### Step 2: Set Up & Run Backend
+In PowerShell terminal 1:
+```powershell
+# Activate virtual environment
+.\venv\Scripts\Activate.ps1
 
-# Windows:
-.\venv\Scripts\activate
-# Linux/macOS:
-source venv/bin/activate
-
+# Install backend dependencies
 pip install -r backend/requirements.txt
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-API Documentation will be live at `http://localhost:8000/docs`.
 
-### Step 4: Install & Start Frontend
-In a new terminal:
-```bash
+# Run FastAPI backend
+python backend/app/main.py
+```
+Backend API and OpenAPI interactive documentation will be live at:
+- **Health Check:** `http://127.0.0.1:8000/health`
+- **Interactive Swagger Docs:** `http://127.0.0.1:8000/docs`
+
+### Step 3: Set Up & Run Frontend
+In PowerShell terminal 2:
+```powershell
 cd frontend
+
+# Install Node modules
 npm install
+
+# Start Vite development server
 npm run dev
 ```
 Open your browser at `http://localhost:5173`.
 
 ---
 
-## 9. Running Automated Tests
+## 8. Running Automated Tests
 
 Run the complete backend test suite:
-```bash
-# From the root directory:
-pytest tests -v
+```powershell
+.\venv\Scripts\pytest
+```
+Expected output:
+```
+tests\test_api_endpoints.py ....                                         [ 12%]
+tests\test_e2e_complete.py s                                             [ 15%]
+tests\test_evaluation_live.py .....                                      [ 31%]
+tests\test_rag.py ....                                                   [ 43%]
+tests\test_safety.py ....                                                [ 56%]
+tests\test_schemas.py ...                                                [ 65%]
+tests\test_tools.py ...........                                          [100%]
+
+======================= 31 passed, 1 skipped in 40s =======================
+```
+
+To run frontend build checks and linting:
+```powershell
+cd frontend
+npm run lint
+npm run build
 ```
 
 ---
 
-## 10. Docker Deployment
+## 9. AI Model, Licensing, & Third-Party Disclosures
 
-Launch the entire stack with Docker Compose:
-```bash
-docker-compose up --build
-```
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:8000`
+### AI Model Details
+- **Primary Model:** `gemma-4-31b-it` (Google Gemma 4 31B Instruction-Tuned)
+- **Fallback Model:** `gemma-4-26b-a4b-it` (Google Gemma 4 26B Mixture-of-Experts Instruction-Tuned)
+- **Provider & SDK:** Google GenAI via official `google-genai` Python library.
+- **Model Licensing:** Gemma 4 models are governed by the [Gemma Terms of Use](https://ai.google.dev/gemma/terms), which permit responsible open-weights research and commercial deployment. Model weights are subject to Google's terms, while this application source code is distributed under Apache 2.0.
+
+### Third-Party Software Licenses
+- **FastAPI:** MIT License
+- **Pydantic:** MIT License
+- **ReportLab:** BSD License
+- **React 19 & React-DOM:** MIT License
+- **Vite:** MIT License
+- **Tailwind CSS:** MIT License
+- **Lucide React:** ISC License
+- **Recharts:** MIT License
 
 ---
 
-## 11. Safety & Ethical Limitations
+## 10. Known Limitations & Future Improvements
 
-1. **Human-in-the-Loop:** ResQ Vision is an operational situational decision-support system. It does NOT autonomously dispatch emergency services or replace certified incident commanders.
-2. **Medical Prohibitions:** The system does not diagnose clinical trauma or evaluate physiological vital signs.
-3. **Environmental Visibility:** Image quality, heavy smoke, and nighttime conditions affect visual recognition. Inferences must be validated on-scene.
+1. **Camera Angles & Nighttime Imagery:** Occlusion, poor lighting, or heavy particulate smoke degrade visual evidence extraction.
+2. **Connectivity in Disasters:** When terrestrial cellular towers fail, edge inference (running quantized Gemma models locally on responder devices via Ollama / ONNX) is required.
+3. **Sensor Modalities:** Future versions could integrate thermal FLIR camera streams and drone orthomosaic imagery.
+4. **Computer-Aided Dispatch (CAD) Integration:** Integration with standard NG911 / NENA i3 call-handling interfaces for accredited PSAPs.
 
 ---
 
-## 12. License
+## 11. Open-Source License
 
-This project is licensed under the **Apache License 2.0**. See the [LICENSE](LICENSE) file for details.
+This project is open-source software licensed under the **[Apache License, Version 2.0](LICENSE)**.

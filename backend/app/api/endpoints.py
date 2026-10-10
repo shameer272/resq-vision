@@ -5,7 +5,15 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 from app.core.config import settings
-from app.ai.gemma_service import gemma_service, APIKeyMissingError, GemmaServiceError
+from app.ai import (
+    gemma_service,
+    do_inference_service,
+    get_ai_service,
+    APIKeyMissingError,
+    GemmaServiceError,
+    DOInferenceServiceError,
+    DOAuthKeyMissingError
+)
 from app.tools.incident_tools import incident_tools
 from app.agent.agent_service import agent_service
 from app.services.translation_service import translation_service
@@ -29,20 +37,36 @@ router = APIRouter()
 class SetApiKeyRequest(BaseModel):
     api_key: str
 
+class SetDOTokenRequest(BaseModel):
+    token: str
+
+class SetProviderRequest(BaseModel):
+    provider: str
+
 @router.get("/health", tags=["System"])
 async def health_check():
     """System health check and configuration audit."""
     has_api_key = bool(settings.GEMINI_API_KEY)
     masked_key = f"{settings.GEMINI_API_KEY[:4]}...{settings.GEMINI_API_KEY[-4:]}" if has_api_key and len(settings.GEMINI_API_KEY) > 8 else ("Configured" if has_api_key else "Not Configured")
+    has_do_token = bool(settings.DO_INFERENCE_TOKEN)
+    masked_do = f"{settings.DO_INFERENCE_TOKEN[:4]}...{settings.DO_INFERENCE_TOKEN[-4:]}" if has_do_token and len(settings.DO_INFERENCE_TOKEN) > 8 else ("Configured" if has_do_token else "Not Configured")
     
     return {
         "status": "healthy",
         "service": "ResQ Vision Multimodal Emergency Situation Intelligence",
+        "ai_provider": settings.AI_PROVIDER,
         "model": settings.GEMMA_MODEL,
         "fallback_model": settings.FALLBACK_MODEL,
         "sdk": "google-genai",
         "gemini_api_key_configured": has_api_key,
         "api_key_preview": masked_key,
+        "digitalocean_inference": {
+            "endpoint": settings.DO_INFERENCE_ENDPOINT,
+            "model": settings.DO_MODEL,
+            "fallback_model": settings.DO_FALLBACK_MODEL,
+            "token_configured": has_do_token,
+            "token_preview": masked_do
+        },
         "storage_mode": "MongoDB" if storage_service.using_mongo else "Local File Storage",
         "rag_knowledge_base_items": len(evaluation_service.get_scenarios())
     }
@@ -63,6 +87,36 @@ async def set_api_key(req: SetApiKeyRequest):
         "message": f"Server-side Gemini API key configured successfully for model {settings.GEMMA_MODEL}."
     }
 
+@router.post("/api/config/do-token", tags=["Configuration"])
+async def set_do_token(req: SetDOTokenRequest):
+    """
+    Sets the DigitalOcean Model Access Token server-side for the current session.
+    """
+    cleaned = req.token.strip()
+    if not cleaned:
+        raise HTTPException(status_code=400, detail="Token cannot be blank")
+    
+    settings.DO_INFERENCE_TOKEN = cleaned
+    return {
+        "status": "success",
+        "message": f"Server-side DigitalOcean Model Access Token configured for model {settings.DO_MODEL}."
+    }
+
+@router.post("/api/config/provider", tags=["Configuration"])
+async def set_provider(req: SetProviderRequest):
+    """
+    Switches active AI provider between 'google' and 'digitalocean'.
+    """
+    provider = req.provider.strip().lower()
+    if provider not in ("google", "digitalocean"):
+        raise HTTPException(status_code=400, detail="Provider must be either 'google' or 'digitalocean'")
+    settings.AI_PROVIDER = provider
+    return {
+        "status": "success",
+        "active_provider": provider,
+        "message": f"Active AI provider switched to {provider}."
+    }
+
 @router.post("/api/analyze", response_model=IncidentAnalysisResponse, tags=["Analysis"])
 async def analyze_incident(
     image: UploadFile = File(...),
@@ -70,11 +124,12 @@ async def analyze_incident(
     voice_transcript: Optional[str] = Form(None),
     location: Optional[str] = Form(None),
     category: Optional[str] = Form(None),
-    language: Optional[str] = Form("en")
+    language: Optional[str] = Form("en"),
+    provider: Optional[str] = Form(None)
 ):
     """
     Primary Multimodal Situation Intelligence Endpoint.
-    Analyzes single scene image + text + voice transcript + geographic context using Gemma 4.
+    Analyzes single scene image + text + voice transcript + geographic context using configured AI provider (Google Gemma 4 or DigitalOcean Inference).
     """
     # 1. Validate file extension
     filename = image.filename or ""
@@ -96,7 +151,8 @@ async def analyze_incident(
     mime_type = image.content_type or "image/jpeg"
 
     try:
-        result = await gemma_service.analyze_multimodal(
+        ai_svc = get_ai_service(provider=provider)
+        result = await ai_svc.analyze_multimodal(
             images=[(img_bytes, mime_type)],
             user_text=user_text,
             voice_transcript=voice_transcript,
@@ -107,12 +163,12 @@ async def analyze_incident(
         # Automatically persist to storage
         storage_service.save_incident(result.model_dump())
         return result
-    except APIKeyMissingError as e:
+    except (APIKeyMissingError, DOAuthKeyMissingError) as e:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=str(e)
         )
-    except GemmaServiceError as e:
+    except (GemmaServiceError, DOInferenceServiceError) as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(e)
@@ -130,11 +186,12 @@ async def analyze_multi_image_incident(
     voice_transcript: Optional[str] = Form(None),
     location: Optional[str] = Form(None),
     category: Optional[str] = Form(None),
-    language: Optional[str] = Form("en")
+    language: Optional[str] = Form("en"),
+    provider: Optional[str] = Form(None)
 ):
     """
     Multi-Image Situation Fusion Endpoint.
-    Analyzes up to 4 scene perspectives simultaneously with Gemma 4 multimodal reasoning.
+    Analyzes up to 4 scene perspectives simultaneously with configured AI provider (Google Gemma 4 or DigitalOcean Inference).
     """
     if len(images) > 4:
         raise HTTPException(
@@ -160,7 +217,8 @@ async def analyze_multi_image_incident(
         processed_images.append((data, img.content_type or "image/jpeg"))
 
     try:
-        result = await gemma_service.analyze_multimodal(
+        ai_svc = get_ai_service(provider=provider)
+        result = await ai_svc.analyze_multimodal(
             images=processed_images,
             user_text=user_text,
             voice_transcript=voice_transcript,
@@ -170,9 +228,9 @@ async def analyze_multi_image_incident(
         )
         storage_service.save_incident(result.model_dump())
         return result
-    except APIKeyMissingError as e:
+    except (APIKeyMissingError, DOAuthKeyMissingError) as e:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(e))
-    except GemmaServiceError as e:
+    except (GemmaServiceError, DOInferenceServiceError) as e:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

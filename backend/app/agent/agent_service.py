@@ -45,8 +45,21 @@ class AgentService:
         "export_report": {
             "fn": incident_tools.export_report,
             "description": "Compiles and exports the incident report as a PDF document."
+        },
+        "validate_incident_inputs": {
+            "fn": incident_tools.validate_incident_inputs,
+            "description": "Validates incoming emergency report completeness, image count, and payload limits."
+        },
+        "classify_incident_support": {
+            "fn": incident_tools.classify_incident_support,
+            "description": "Provides classification support and keyword cue matching across emergency categories."
+        },
+        "manage_incident_history": {
+            "fn": incident_tools.manage_incident_history,
+            "description": "Lists, retrieves, and inspects saved incident records from persistent storage."
         }
     }
+
 
     def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """

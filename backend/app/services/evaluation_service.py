@@ -11,7 +11,7 @@ from app.schemas.incident import (
 from app.safety.safety_service import safety_service
 from app.rag.rag_service import rag_service
 from app.tools.incident_tools import incident_tools
-from app.ai.gemma_service import gemma_service
+from app.ai import get_ai_service, gemma_service
 
 EVALUATION_SCENARIOS: List[Dict[str, Any]] = [
     # 1. Road Accident
@@ -264,7 +264,75 @@ DEMO_SCENARIOS = [
         "user_text": "Two sedans collided at the junction. Smoke-like vapor is coming from the front bumper, and the fast lane is completely blocked.",
         "voice_transcript": "There is smoke coming from the vehicle and traffic is blocked. A crowd is gathering around.",
         "sample_image_url": "/demo-assets/accident.jpg",
-        "badge": "DEMO SCENARIO"
+        "badge": "DEMO SCENARIO",
+        "sample_output": {
+            "incident_id": "DEMO-SCENARIO-01",
+            "model_used": "Benchmark Reference (Safe Demo Mode)",
+            "primary_model": "gemma-4-31b-it",
+            "status": "demo_preloaded",
+            "timestamp": "2026-10-10T12:00:00Z",
+            "location": "Outer Ring Road (ORR) Exit 12, Gachibowli, Hyderabad",
+            "incident_type": "road_accident",
+            "incident_summary": "Two passenger sedans collided at the junction, resulting in front-end crumple, coolant vapor release, and fast-lane roadway obstruction.",
+            "severity_estimate": "high",
+            "observations": [
+                {
+                    "description": "Front-end bumper and hood crumpled on two passenger sedans",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Visible structural impact crushing on front quarter panels"
+                },
+                {
+                    "description": "White vapor venting from engine radiator compartment",
+                    "source": "observed",
+                    "confidence": "medium",
+                    "evidence": "Vapor plume visible escaping above damaged front grille"
+                },
+                {
+                    "description": "Vehicles positioned perpendicularly blocking fast lane",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Silver sedan angled across lane divider markings"
+                }
+            ],
+            "user_reported_information": [
+                "Loud collision sound at junction",
+                "Fast lane completely blocked",
+                "Pedestrian crowd gathering around vehicles"
+            ],
+            "potential_concerns": [
+                {
+                    "concern": "Secondary traffic collision hazard",
+                    "reason": "Disabled vehicles blocking high-speed lane",
+                    "evidence": "Sedans positioned across active traffic lanes",
+                    "confidence": "high",
+                    "requires_human_verification": True
+                },
+                {
+                    "concern": "Engine bay thermal ignition hazard",
+                    "reason": "Hot exhaust manifold contact with leaking radiator/fluid",
+                    "evidence": "Dark fluid sheen visible beneath front engine bay",
+                    "confidence": "medium",
+                    "requires_human_verification": True
+                }
+            ],
+            "uncertainties": [
+                "Exact occupant injury status cannot be verified from external imagery",
+                "High-voltage hybrid/EV powertrain presence unverified"
+            ],
+            "missing_information": [
+                "Number of vehicle occupants requiring hospital transport",
+                "Directional mile-marker for approach route"
+            ],
+            "recommended_information_to_communicate": [
+                "Report precise fast-lane blockage to Cyberabad Traffic Control",
+                "Request dual ambulance package and heavy wrecker"
+            ],
+            "confidence_notes": [
+                "Good daylight illumination and clear frontal camera perspective"
+            ],
+            "safety_disclaimer": "SAFE DEMO MODE: Pre-calculated benchmark dataset. Human verification required. No live AI inference executed."
+        }
     },
     {
         "id": "DEMO-02",
@@ -274,7 +342,68 @@ DEMO_SCENARIOS = [
         "user_text": "Sudden cloudburst flooded the underpass. Water is up to the tire rims of stranded cars.",
         "voice_transcript": "Water level is rising fast in the subway, vehicles cannot pass through.",
         "sample_image_url": "/demo-assets/flood.jpg",
-        "badge": "DEMO SCENARIO"
+        "badge": "DEMO SCENARIO",
+        "sample_output": {
+            "incident_id": "DEMO-SCENARIO-02",
+            "model_used": "Benchmark Reference (Safe Demo Mode)",
+            "primary_model": "gemma-4-31b-it",
+            "status": "demo_preloaded",
+            "timestamp": "2026-10-10T12:00:00Z",
+            "location": "Kukatpally Y-Junction Underpass, Hyderabad",
+            "incident_type": "flooding",
+            "incident_summary": "Severe underpass inundation with turbid storm floodwater submerging passenger vehicles to wheel hub level.",
+            "severity_estimate": "high",
+            "observations": [
+                {
+                    "description": "Opaque turbid floodwater submerging roadway surface to axle height",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Water line visible covering tire rims and lower bumpers"
+                },
+                {
+                    "description": "Multiple commuter vehicles stationary in underpass low point",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Three stalled passenger cars submerged in roadway dip"
+                }
+            ],
+            "user_reported_information": [
+                "Sudden cloudburst flooded the underpass",
+                "Water rising rapidly inside subway passage"
+            ],
+            "potential_concerns": [
+                {
+                    "concern": "Rapid water level rise & vehicle submersion hazard",
+                    "reason": "Depressed roadway acts as natural storm retention basin",
+                    "evidence": "Turbid water level accumulating above wheel hub line",
+                    "confidence": "high",
+                    "requires_human_verification": True
+                },
+                {
+                    "concern": "Concealed manholes and displaced stormwater grates",
+                    "reason": "Hydrostatic backpressure dislodges heavy storm sewer lids",
+                    "evidence": "Completely opaque flood surface concealing pavement",
+                    "confidence": "medium",
+                    "requires_human_verification": True
+                }
+            ],
+            "uncertainties": [
+                "Occupant occupancy counts inside submerged vehicle cabins",
+                "Operational status of municipal storm dewatering pumps"
+            ],
+            "missing_information": [
+                "Inflow rate from adjoining stormwater drains",
+                "Nearest available high-clearance rescue vehicle staging area"
+            ],
+            "recommended_information_to_communicate": [
+                "Warn approaching motorists to divert away from underpass ramp",
+                "Request GHMC Disaster Response Force mobile dewatering pump package"
+            ],
+            "confidence_notes": [
+                "Overcast daylight with clear waterline reference points"
+            ],
+            "safety_disclaimer": "SAFE DEMO MODE: Pre-calculated benchmark dataset. Human verification required. No live AI inference executed."
+        }
     },
     {
         "id": "DEMO-03",
@@ -284,7 +413,69 @@ DEMO_SCENARIOS = [
         "user_text": "Dense grey smoke venting from an electrical duct on the second floor of the retail complex.",
         "voice_transcript": "There is heavy smoke near the building stairs, smell of burning insulation.",
         "sample_image_url": "/demo-assets/smoke.jpg",
-        "badge": "DEMO SCENARIO"
+        "badge": "DEMO SCENARIO",
+        "sample_output": {
+            "incident_id": "DEMO-SCENARIO-03",
+            "model_used": "Benchmark Reference (Safe Demo Mode)",
+            "primary_model": "gemma-4-31b-it",
+            "status": "demo_preloaded",
+            "timestamp": "2026-10-10T12:00:00Z",
+            "location": "Hitec City Cyber Towers Cross Road, Hyderabad",
+            "incident_type": "smoke_fire",
+            "incident_summary": "Grey particulate smoke discharging from upper facade utility vent of commercial retail structure with burning insulation odor.",
+            "severity_estimate": "critical",
+            "observations": [
+                {
+                    "description": "Dense particulate smoke issuing from upper exterior louvers",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Grey smoke plume expanding upwards from second-story facade"
+                },
+                {
+                    "description": "Building envelope structurally intact with no exterior flame breakthrough",
+                    "source": "observed",
+                    "confidence": "medium",
+                    "evidence": "Window glazing and facade panels intact externally"
+                }
+            ],
+            "user_reported_information": [
+                "Dense grey smoke venting from electrical duct",
+                "Heavy smoke near building stairs",
+                "Distinct odor of burning synthetic insulation"
+            ],
+            "potential_concerns": [
+                {
+                    "concern": "Electrical riser fire propagation across floors",
+                    "reason": "Vertical cabling chases facilitate rapid flame and smoke spread",
+                    "evidence": "Discharge concentrated around utility shaft openings",
+                    "confidence": "high",
+                    "requires_human_verification": True
+                },
+                {
+                    "concern": "Toxic smoke inhalation in egress stairwells",
+                    "reason": "Thermal buoyancy draws carbon monoxide into escape corridors",
+                    "evidence": "Witness reports heavy smoke accumulating at stair landings",
+                    "confidence": "high",
+                    "requires_human_verification": True
+                }
+            ],
+            "uncertainties": [
+                "Internal fire seat origin and extent inside service chase",
+                "Percentage of building occupants evacuated to ground level"
+            ],
+            "missing_information": [
+                "Building automatic sprinkler activation status",
+                "Main electrical supply isolation status"
+            ],
+            "recommended_information_to_communicate": [
+                "Request Madhapur Fire Station response package with aerial ladder",
+                "Enforce 50-meter stand-off perimeter away from building vents"
+            ],
+            "confidence_notes": [
+                "Clear daytime exterior view with visible thermal plume dispersion"
+            ],
+            "safety_disclaimer": "SAFE DEMO MODE: Pre-calculated benchmark dataset. Human verification required. No live AI inference executed."
+        }
     },
     {
         "id": "DEMO-04",
@@ -294,9 +485,72 @@ DEMO_SCENARIOS = [
         "user_text": "High winds snapped a large branch and entangled electrical utility cables across both lanes.",
         "voice_transcript": "Tree branch down with black cables touching wet tarmac. Cars turning back.",
         "sample_image_url": "/demo-assets/blocked.jpg",
-        "badge": "DEMO SCENARIO"
+        "badge": "DEMO SCENARIO",
+        "sample_output": {
+            "incident_id": "DEMO-SCENARIO-04",
+            "model_used": "Benchmark Reference (Safe Demo Mode)",
+            "primary_model": "gemma-4-31b-it",
+            "status": "demo_preloaded",
+            "timestamp": "2026-10-10T12:00:00Z",
+            "location": "Banjara Hills Road No. 1, Hyderabad",
+            "incident_type": "blocked_road",
+            "incident_summary": "Major arterial roadway obstruction caused by a fallen hardwood tree branch entangling utility power lines across wet asphalt lanes.",
+            "severity_estimate": "critical",
+            "observations": [
+                {
+                    "description": "Large tree limb completely spanning two-lane roadway corridor",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Hardwood branch resting across center lane dividers"
+                },
+                {
+                    "description": "Downed utility cables touching wet asphalt surface",
+                    "source": "observed",
+                    "confidence": "high",
+                    "evidence": "Dark insulated lines draped over road and sidewalk curb"
+                }
+            ],
+            "user_reported_information": [
+                "High winds caused branch failure",
+                "Black cables touching wet tarmac",
+                "Vehicular traffic turning back"
+            ],
+            "potential_concerns": [
+                {
+                    "concern": "Electrocution hazard from potentially energized downed cables",
+                    "reason": "Severed distribution lines can remain live and energize wet pavement",
+                    "evidence": "Conductors in direct contact with wet conductive roadway",
+                    "confidence": "high",
+                    "requires_human_verification": True
+                },
+                {
+                    "concern": "Emergency response corridor disruption",
+                    "reason": "Complete physical obstruction blocks ambulance and fire apparatus",
+                    "evidence": "Limb diameter blocks full roadway width",
+                    "confidence": "high",
+                    "requires_human_verification": True
+                }
+            ],
+            "uncertainties": [
+                "Voltage level and energization state of downed lines unverified",
+                "Potential subterranean utility line stress from tree root upheaval"
+            ],
+            "missing_information": [
+                "TSSPDCL feeder circuit breaker trip confirmation",
+                "Designated detour route for emergency vehicles"
+            ],
+            "recommended_information_to_communicate": [
+                "Do NOT approach or touch downed wires; establish 20m safety zone",
+                "Urgent notification to Telangana Southern Power Distribution (TSSPDCL)"
+            ],
+            "confidence_notes": [
+                "Clear street-level imagery with distinct overhead wire paths"
+            ],
+            "safety_disclaimer": "SAFE DEMO MODE: Pre-calculated benchmark dataset. Human verification required. No live AI inference executed."
+        }
     }
 ]
+
 
 def _load_scenario_images(scen: Dict[str, Any]) -> List[Tuple[bytes, str]]:
     """Loads matching real scene images for evaluation scenarios from local asset directories."""
@@ -533,8 +787,9 @@ class EvaluationService:
             action_trace_summary = None
 
             try:
-                # Call production Gemma 4 service
-                analysis_res = await gemma_service.analyze_multimodal(
+                # Call active production AI service (Gemma 4 or DigitalOcean Inference)
+                ai_svc = get_ai_service()
+                analysis_res = await ai_svc.analyze_multimodal(
                     images=images,
                     user_text=scen.get("user_text"),
                     voice_transcript=scen.get("voice_transcript"),

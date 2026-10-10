@@ -12,10 +12,19 @@ class Settings(BaseSettings):
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     
+    # AI Provider Selection ("google" or "digitalocean")
+    AI_PROVIDER: str = "google"
+
     # Gemma / Gemini AI Settings
     GEMINI_API_KEY: str = ""
     GEMMA_MODEL: str = "gemma-4-31b-it"
     FALLBACK_MODEL: str = "gemma-4-26b-a4b-it"
+
+    # DigitalOcean GenAI Serverless Inference Settings
+    DO_INFERENCE_ENDPOINT: str = "https://inference.do-ai.run/v1"
+    DO_INFERENCE_TOKEN: str = ""
+    DO_MODEL: str = "meta-llama/Meta-Llama-3.2-11B-Vision-Instruct"
+    DO_FALLBACK_MODEL: str = "meta-llama/Llama-3.3-70B-Instruct"
     
     # MongoDB Settings
     MONGODB_URI: str = ""

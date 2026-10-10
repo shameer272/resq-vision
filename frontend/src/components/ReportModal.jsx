@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Download, FileText, Printer, Check, Copy, Loader2 } from "lucide-react";
+import { X, Download, FileText, Check, Copy, Loader2 } from "lucide-react";
 import { exportPdf } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
 

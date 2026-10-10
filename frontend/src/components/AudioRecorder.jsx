@@ -109,7 +109,7 @@ export default function AudioRecorder({ transcript, setTranscript, onAudioReady 
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
     }

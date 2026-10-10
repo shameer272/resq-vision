@@ -6,11 +6,7 @@ import {
   Droplets,
   Flame,
   AlertOctagon,
-  CheckCircle,
-  FileText,
-  Languages,
-  CheckSquare,
-  ExternalLink,
+  Eye,
 } from "lucide-react";
 import { getDemoScenarios } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
@@ -41,8 +37,8 @@ export default function DemoPage({ setActiveTab, onSelectDemo }) {
     }
   };
 
-  const handleLaunchScenario = (scenario) => {
-    onSelectDemo(scenario);
+  const handleLaunchScenario = (scenario, safeDemoReview = false) => {
+    onSelectDemo({ ...scenario, load_sample_output: safeDemoReview });
     setActiveTab("analyze");
   };
 
@@ -128,14 +124,23 @@ export default function DemoPage({ setActiveTab, onSelectDemo }) {
                     </div>
                   </div>
 
-                  {/* Launch button */}
-                  <div className="pt-4 border-t border-slate-800/80">
+                  {/* Dual Launch buttons: Live Gemma 4 vs Safe Demo Mode */}
+                  <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2">
                     <button
-                      onClick={() => handleLaunchScenario(demo)}
-                      className="w-full flex items-center justify-center space-x-2 rounded-xl bg-slate-800 border border-slate-700 py-2.5 text-xs font-bold text-slate-200 hover:bg-red-600 hover:border-red-600 hover:text-white transition-all shadow-md group"
+                      onClick={() => handleLaunchScenario(demo, false)}
+                      className="flex-1 flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 py-2.5 text-xs font-bold text-white hover:from-red-500 hover:to-rose-500 transition-all shadow-md group"
+                      title="Load scenario inputs into form to execute live multimodal Gemma 4 inference"
                     >
-                      <span>{t("demo.btn_load", "Load into Gemma 4 Pipeline")}</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      <span>{t("demo.btn_load_live", "Live Gemma 4 Analysis")}</span>
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                    </button>
+                    <button
+                      onClick={() => handleLaunchScenario(demo, true)}
+                      className="flex-1 flex items-center justify-center space-x-1.5 rounded-xl bg-slate-800 border border-slate-700 py-2.5 text-xs font-bold text-amber-300 hover:bg-slate-700 hover:text-white transition-all shadow-md"
+                      title="Inspect pre-calculated benchmark data without requiring API key"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-amber-400" />
+                      <span>{t("demo.btn_safe_demo", "Safe Demo Mode (Offline)")}</span>
                     </button>
                   </div>
                 </div>
@@ -144,6 +149,7 @@ export default function DemoPage({ setActiveTab, onSelectDemo }) {
           })}
         </div>
       )}
+
 
       {/* Suggested 3-Step Judge Walkthrough */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8 space-y-4">

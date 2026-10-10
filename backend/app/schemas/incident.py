@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import List, Optional, Literal, Dict, Any
 
 class Observation(BaseModel):
@@ -56,6 +56,74 @@ class RawIncidentExtraction(BaseModel):
     safety_disclaimer: str = Field(
         default="AI-generated intelligence for operational support only. Does not replace professional human dispatch or medical diagnosis. Human verification required."
     )
+    # Extended structured specification fields
+    observed_evidence: List[str] = Field(default_factory=list, description="Observed evidence citations")
+    potential_hazards: List[str] = Field(default_factory=list, description="Identified scene hazards")
+    severity_estimate: Literal["critical", "high", "moderate", "low"] = Field(
+        default="moderate", description="Severity estimate"
+    )
+    confidence_or_uncertainty: List[str] = Field(
+        default_factory=list, description="Combined confidence and epistemic uncertainty indicators"
+    )
+    recommended_actions: List[str] = Field(
+        default_factory=list, description="Actionable recommendations for human responders"
+    )
+    limitations: List[str] = Field(
+        default_factory=list, description="Operational and observational constraints"
+    )
+
+    @model_validator(mode="after")
+    def populate_extended_fields(self):
+        if not self.observed_evidence and self.observations:
+            self.observed_evidence = [
+                f"[{obs.source.upper()}] {obs.description} (Evidence: {obs.evidence})"
+                for obs in self.observations if obs.evidence
+            ]
+        if not self.potential_hazards and self.potential_concerns:
+            self.potential_hazards = [
+                f"{c.concern}: {c.reason}" for c in self.potential_concerns
+            ]
+        if not self.confidence_or_uncertainty:
+            combined = []
+            if self.confidence_notes:
+                combined.extend(self.confidence_notes)
+            if self.uncertainties:
+                combined.extend(self.uncertainties)
+            self.confidence_or_uncertainty = combined
+        if not self.recommended_actions and self.recommended_information_to_communicate:
+            self.recommended_actions = list(self.recommended_information_to_communicate)
+        if not self.limitations:
+            limits = [
+                "Decision support only: does not substitute for certified fire, medical, or police dispatch.",
+                "Multimodal evaluation bounded by submitted image resolution, perspective, and lighting."
+            ]
+            if self.uncertainties:
+                for unc in self.uncertainties:
+                    if unc not in limits:
+                        limits.append(unc)
+            self.limitations = limits
+
+        # Calibrate severity estimate if default
+        if self.severity_estimate == "moderate":
+            high_types = {"smoke_fire", "flooding", "structural_damage"}
+            has_high_concern = any(
+                c.confidence == "high" for c in self.potential_concerns
+            )
+            has_urgent_keywords = any(
+                kw in self.incident_summary.lower()
+                for kw in ["fire", "explosion", "flame", "collapse", "drowning", "trapped"]
+            )
+            if has_urgent_keywords or (self.incident_type in high_types and has_high_concern):
+                self.severity_estimate = "critical"
+            elif self.incident_type in high_types or has_high_concern:
+                self.severity_estimate = "high"
+            elif self.incident_type in {"no_emergency", "ambiguous"}:
+                self.severity_estimate = "low"
+            else:
+                self.severity_estimate = "moderate"
+
+        return self
+
 
 class IncidentAnalysisResponse(RawIncidentExtraction):
     incident_id: str

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {
   ShieldAlert,
-  Send,
   Loader2,
   FileCheck,
   CheckSquare,
@@ -9,7 +8,6 @@ import {
   VolumeX,
   Languages,
   Download,
-  Save,
   AlertTriangle,
   Info,
   MapPin,
@@ -17,6 +15,7 @@ import {
   BookOpen,
   HelpCircle,
   Sparkles,
+  Eye,
 } from "lucide-react";
 import ImageUploader from "../components/ImageUploader";
 import AudioRecorder from "../components/AudioRecorder";
@@ -33,9 +32,9 @@ import {
   generateChecklist,
   translateIncident,
   exportPdf,
-  saveIncidentEndpoint,
 } from "../services/api";
 import { useLanguage } from "../context/LanguageContext";
+
 
 function stripLanguagePrefixes(str) {
   if (typeof str !== "string") return str;
@@ -114,7 +113,6 @@ export default function AnalyzePage({
   const [generatingReport, setGeneratingReport] = useState(false);
   const [generatingChecklist, setGeneratingChecklist] = useState(false);
   const [exportingPdf, setExportingPdf] = useState(false);
-  const [savedSuccess, setSavedSuccess] = useState(false);
 
   // SpeechSynthesis voice output
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -163,7 +161,9 @@ export default function AnalyzePage({
       setCategory(preloadedScenario.category ? preloadedScenario.category.toLowerCase().replace(/[^a-z]/g, "_") : "auto");
 
       // If preloaded scenario has analysis results, load into canonicalResult
-      if (preloadedScenario.incident_summary && preloadedScenario.observations) {
+      if (preloadedScenario.load_sample_output && preloadedScenario.sample_output) {
+        updateCanonicalResult(preloadedScenario.sample_output);
+      } else if (preloadedScenario.incident_summary && preloadedScenario.observations) {
         updateCanonicalResult(preloadedScenario);
       }
 
@@ -187,6 +187,7 @@ export default function AnalyzePage({
       }
     }
   }, [preloadedScenario]);
+
 
   // Main Analysis Handler
   const handleAnalyze = async (e) => {
@@ -474,20 +475,35 @@ export default function AnalyzePage({
 
             {/* Error Display */}
             {analysisError && (
-              <div className="rounded-xl border border-red-900/80 bg-red-950/40 p-3 text-xs text-red-300">
-                <div className="font-semibold flex items-center space-x-1.5 mb-1">
+              <div className="rounded-xl border border-red-900/80 bg-red-950/40 p-3.5 text-xs text-red-300 space-y-2">
+                <div className="font-semibold flex items-center space-x-1.5">
                   <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
                   <span>{t("analyze.analysis_notice", "Analysis Notice:")}</span>
                 </div>
                 <p className="leading-relaxed">{analysisError}</p>
-                {analysisError.includes("API key") && (
-                  <button
-                    onClick={onOpenApiKeyModal}
-                    className="mt-2 text-xs font-bold text-red-400 underline"
-                  >
-                    {t("analyze.click_api_key", "Click here to enter your Gemini API Key")}
-                  </button>
-                )}
+                <div className="pt-2 border-t border-red-900/60 flex flex-wrap items-center justify-between gap-2">
+                  {analysisError.includes("API key") && (
+                    <button
+                      type="button"
+                      onClick={onOpenApiKeyModal}
+                      className="text-xs font-bold text-red-400 hover:text-red-300 underline"
+                    >
+                      {t("analyze.click_api_key", "Configure Gemini API Key")}
+                    </button>
+                  )}
+                  {preloadedScenario?.sample_output && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateCanonicalResult(preloadedScenario.sample_output);
+                        setAnalysisError(null);
+                      }}
+                      className="rounded bg-slate-800 border border-amber-600/80 px-2.5 py-1 text-[11px] font-bold text-amber-300 hover:bg-slate-700"
+                    >
+                      View Pre-computed Demo Inspection
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -527,6 +543,29 @@ export default function AnalyzePage({
       {/* ========================================================== */}
       {displayedResult && (
         <div className="space-y-6 pt-4 border-t border-slate-800">
+          {/* Safe Demo Notice Banner if offline benchmark mode */}
+          {(displayedResult.status === "demo_preloaded" || displayedResult.model_used?.includes("Demo")) && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-amber-600/70 bg-amber-950/40 p-4 text-xs text-amber-200">
+              <div className="flex items-center space-x-2.5">
+                <Eye className="h-4 w-4 text-amber-400 shrink-0" />
+                <div>
+                  <span className="font-bold text-amber-300 uppercase tracking-wider">Safe Demo Mode: </span>
+                  <span>Viewing verified pre-calculated benchmark assessment for evaluator inspection. No live AI inference was executed for this view.</span>
+                </div>
+              </div>
+              {systemStatus?.gemini_api_key_configured && (
+                <button
+                  type="button"
+                  onClick={handleAnalyze}
+                  disabled={isAnalyzing}
+                  className="shrink-0 rounded-lg bg-red-600 px-3.5 py-1.5 font-bold text-white hover:bg-red-500 transition-colors text-[11px]"
+                >
+                  Run Live Inference Now
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Action Toolbar */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
             <div className="flex items-center space-x-2">
@@ -535,6 +574,7 @@ export default function AnalyzePage({
                 ID: {displayedResult.incident_id}
               </span>
             </div>
+
 
             <div className="flex flex-wrap items-center gap-2">
               {/* Voice Read Aloud */}

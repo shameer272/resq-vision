@@ -319,4 +319,156 @@ class IncidentTools:
             "translated_report": translated
         }
 
+    @staticmethod
+    def validate_incident_inputs(
+        user_text: Optional[str] = None,
+        location: Optional[str] = None,
+        image_count: int = 0,
+        file_sizes_bytes: Optional[List[int]] = None,
+        mime_types: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Tool: validate_incident_inputs
+        Validates completeness, media constraints, format boundaries, and safety for incident submission.
+        """
+        valid = True
+        issues: List[str] = []
+        recommendations: List[str] = []
+
+        if image_count <= 0:
+            valid = False
+            issues.append("At least one scene image is required for multimodal analysis.")
+        elif image_count > 4:
+            valid = False
+            issues.append(f"Received {image_count} images; maximum permitted is 4.")
+
+        allowed_mimes = ["image/jpeg", "image/png", "image/webp"]
+        if mime_types:
+            for idx, mt in enumerate(mime_types):
+                if mt.lower() not in allowed_mimes:
+                    valid = False
+                    issues.append(f"Image {idx+1} format '{mt}' is unsupported. Must be JPEG, PNG, or WebP.")
+
+        max_bytes = 10 * 1024 * 1024
+        if file_sizes_bytes:
+            for idx, sz in enumerate(file_sizes_bytes):
+                if sz > max_bytes:
+                    valid = False
+                    issues.append(f"Image {idx+1} size ({round(sz / (1024*1024), 2)}MB) exceeds 10MB limit.")
+
+        text_len = len(user_text.strip()) if user_text else 0
+        if text_len == 0:
+            recommendations.append("Providing a text description helps clarify ambiguous visual angles.")
+        elif text_len < 10:
+            recommendations.append("Text description is very short; consider including visible hazards or trapped count.")
+
+        if not location or not location.strip():
+            recommendations.append("Missing location description; approximate mile marker or cross-street is recommended.")
+
+        return {
+            "status": "success",
+            "is_valid": valid,
+            "issues": issues,
+            "recommendations": recommendations,
+            "image_count": image_count,
+            "has_location": bool(location and location.strip()),
+            "has_description": bool(user_text and user_text.strip())
+        }
+
+    @staticmethod
+    def classify_incident_support(text_description: str, location_hint: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Tool: classify_incident_support
+        Rule-based keyword and hazard evaluation tool providing classification support
+        across emergency categories (road_accident, smoke_fire, flooding, structural_damage, blocked_road, severe_weather).
+        """
+        if not text_description:
+            return {
+                "status": "ambiguous",
+                "predicted_type": "ambiguous",
+                "confidence": "low",
+                "candidate_scores": {},
+                "rationale": "No text description provided for keyword analysis."
+            }
+
+        text = text_description.lower()
+        scores: Dict[str, int] = {
+            "road_accident": 0,
+            "smoke_fire": 0,
+            "flooding": 0,
+            "structural_damage": 0,
+            "blocked_road": 0,
+            "severe_weather": 0
+        }
+
+        keywords = {
+            "road_accident": ["car", "vehicle", "crash", "collision", "sedan", "truck", "motorcycle", "bike", "overturned", "bumper", "skid", "traffic"],
+            "smoke_fire": ["smoke", "fire", "flame", "burning", "blaze", "ash", "spark", "fume", "ignite", "thermal"],
+            "flooding": ["flood", "water", "inundat", "submerg", "drain", "rain", "puddle", "overflow", "culvert"],
+            "structural_damage": ["collapse", "wall", "crack", "rubble", "concrete", "beam", "building", "roof", "pillar"],
+            "blocked_road": ["tree", "pole", "cable", "wire", "blocked", "obstruction", "fallen", "roadway closed"],
+            "severe_weather": ["cyclone", "storm", "hurricane", "wind", "lightning", "hail", "gale", "thunder"]
+        }
+
+        for cat, terms in keywords.items():
+            for t in terms:
+                if t in text:
+                    scores[cat] += 1
+
+        top_cat = max(scores, key=lambda k: scores[k])
+        max_score = scores[top_cat]
+
+        if max_score == 0:
+            predicted = "ambiguous"
+            conf = "low"
+            rationale = "No category-specific cues identified in description."
+        else:
+            predicted = top_cat
+            conf = "high" if max_score >= 3 else ("medium" if max_score == 2 else "low")
+            rationale = f"Matched {max_score} category indicator terms for {top_cat}."
+
+        return {
+            "status": "success",
+            "predicted_type": predicted,
+            "confidence": conf,
+            "candidate_scores": scores,
+            "rationale": rationale
+        }
+
+    @staticmethod
+    def manage_incident_history(action: str = "list", incident_id: Optional[str] = None, limit: int = 20) -> Dict[str, Any]:
+        """
+        Tool: manage_incident_history
+        Deterministic tool for listing, retrieving, and inspecting incident history records.
+        """
+        if action == "get":
+            if not incident_id:
+                return {"status": "error", "message": "incident_id is required for action 'get'"}
+            record = storage_service.get_incident_by_id(incident_id)
+            if not record:
+                return {"status": "not_found", "incident_id": incident_id}
+            return {"status": "success", "incident": record}
+        elif action == "delete":
+            if not incident_id:
+                return {"status": "error", "message": "incident_id is required for action 'delete'"}
+            ok = storage_service.delete_incident(incident_id)
+            return {"status": "success" if ok else "not_found", "incident_id": incident_id}
+        else:
+            records = storage_service.get_incidents(limit=limit)
+            return {
+                "status": "success",
+                "count": len(records),
+                "incidents": [
+                    {
+                        "incident_id": r.get("incident_id"),
+                        "incident_type": r.get("incident_type"),
+                        "timestamp": r.get("timestamp"),
+                        "location": r.get("location"),
+                        "summary": r.get("incident_summary", "")[:100]
+                    }
+                    for r in records
+                ]
+            }
+
 incident_tools = IncidentTools()
+

@@ -19,6 +19,32 @@ export async function setServerApiKey(apiKey) {
   return res.json();
 }
 
+export async function setServerDOToken(token) {
+  const res = await fetch(`${API_BASE}/api/config/do-token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to configure DigitalOcean token" }));
+    throw new Error(err.detail || "Failed to configure DigitalOcean token");
+  }
+  return res.json();
+}
+
+export async function setServerAIProvider(provider) {
+  const res = await fetch(`${API_BASE}/api/config/provider`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to set provider" }));
+    throw new Error(err.detail || "Failed to set provider");
+  }
+  return res.json();
+}
+
 export async function analyzeIncident(formData) {
   const res = await fetch(`${API_BASE}/api/analyze`, {
     method: "POST",

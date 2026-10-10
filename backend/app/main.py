@@ -1,4 +1,11 @@
 import os
+import sys
+
+# Ensure backend root is in sys.path so 'from app...' works regardless of cwd
+backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if backend_root not in sys.path:
+    sys.path.insert(0, backend_root)
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -45,4 +52,4 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=True)
+    uvicorn.run("app.main:app", host=settings.HOST, port=settings.PORT, reload=True, app_dir=backend_root)

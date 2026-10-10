@@ -1,19 +1,12 @@
 import React, { useState, useEffect } from "react";
 import {
   BarChart3,
-  ShieldCheck,
   Zap,
-  CheckCircle2,
-  AlertTriangle,
-  Play,
-  RotateCw,
-  Clock,
   Layers,
-  FileCheck,
   Cpu,
   Info,
   AlertCircle,
-  XCircle,
+  RotateCw,
 } from "lucide-react";
 import {
   ResponsiveContainer,

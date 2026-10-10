@@ -84,3 +84,34 @@ async def test_agent_workflow_orchestration():
     assert len(res["execution_trace"]) >= 5
     assert "report" in res["tool_outputs"]
     assert "checklist" in res["tool_outputs"]
+
+def test_validate_incident_inputs():
+    # Valid input with 1 image
+    res = incident_tools.validate_incident_inputs(
+        user_text="Smoke coming from engine bay after collision",
+        location="ORR Exit 12",
+        image_count=1,
+        file_sizes_bytes=[1024 * 500],
+        mime_types=["image/jpeg"]
+    )
+    assert res["is_valid"] is True
+    assert len(res["issues"]) == 0
+
+    # Invalid input: 0 images
+    res_zero = incident_tools.validate_incident_inputs(image_count=0)
+    assert res_zero["is_valid"] is False
+    assert any("image is required" in iss for iss in res_zero["issues"])
+
+def test_classify_incident_support():
+    res_road = incident_tools.classify_incident_support("Two sedans had a head-on collision at the intersection with shattered glass")
+    assert res_road["predicted_type"] == "road_accident"
+    assert res_road["confidence"] in ["high", "medium"]
+
+    res_fire = incident_tools.classify_incident_support("Black smoke and fire flames rising from warehouse roof")
+    assert res_fire["predicted_type"] == "smoke_fire"
+
+def test_manage_incident_history():
+    res_list = incident_tools.manage_incident_history(action="list", limit=5)
+    assert res_list["status"] == "success"
+    assert "incidents" in res_list
+

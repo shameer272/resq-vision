@@ -59,3 +59,9 @@ def test_raw_incident_extraction_validation():
     assert extracted.incident_type == "road_accident"
     assert len(extracted.observations) == 1
     assert len(extracted.potential_concerns) == 1
+    assert len(extracted.observed_evidence) >= 1
+    assert len(extracted.potential_hazards) >= 1
+    assert extracted.severity_estimate in ["critical", "high", "moderate", "low"]
+    assert len(extracted.confidence_or_uncertainty) >= 1
+    assert len(extracted.recommended_actions) >= 1
+    assert len(extracted.limitations) >= 1
