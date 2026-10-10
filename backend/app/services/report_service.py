@@ -164,6 +164,11 @@ class ReportService:
             filename = f"report_{incident_id}.pdf"
             output_path = os.path.join(settings.LOCAL_STORAGE_DIR, filename)
 
+        try:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        except OSError as e:
+            print(f"[ReportService] Warning: Could not create directory for PDF '{output_path}': {e}")
+
         doc = SimpleDocTemplate(
             output_path,
             pagesize=letter,

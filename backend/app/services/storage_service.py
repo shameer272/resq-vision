@@ -35,20 +35,30 @@ class StorageService:
         else:
             self.using_mongo = False
 
-        if not os.path.exists(self.local_file):
-            with open(self.local_file, "w", encoding="utf-8") as f:
-                json.dump([], f)
+        try:
+            os.makedirs(os.path.dirname(self.local_file), exist_ok=True)
+            if not os.path.exists(self.local_file):
+                with open(self.local_file, "w", encoding="utf-8") as f:
+                    json.dump([], f)
+        except OSError as e:
+            print(f"[Storage] Notice: Local storage file init failed ({e}).")
 
     def _read_local_incidents(self) -> List[Dict[str, Any]]:
         try:
+            if not os.path.exists(self.local_file):
+                return []
             with open(self.local_file, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return []
 
     def _write_local_incidents(self, incidents: List[Dict[str, Any]]):
-        with open(self.local_file, "w", encoding="utf-8") as f:
-            json.dump(incidents, f, indent=2, ensure_ascii=False)
+        try:
+            os.makedirs(os.path.dirname(self.local_file), exist_ok=True)
+            with open(self.local_file, "w", encoding="utf-8") as f:
+                json.dump(incidents, f, indent=2, ensure_ascii=False)
+        except OSError as e:
+            print(f"[Storage] Warning: Failed to write to local storage file: {e}")
 
     def save_incident(self, incident_data: Dict[str, Any]) -> str:
         incident_id = incident_data.get("incident_id")
