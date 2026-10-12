@@ -95,3 +95,40 @@ async def test_missing_do_token_returns_clear_error_when_do_requested():
     finally:
         settings.DO_INFERENCE_TOKEN = orig_token
 
+@pytest.mark.anyio
+async def test_api_health_alias_endpoint():
+    """Verifies that /api/health acts as a first-class route alias for /health."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        response = await client.get("/api/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert "gemini_api_key_configured" in data
+        assert isinstance(data["gemini_api_key_configured"], bool)
+
+@pytest.mark.anyio
+async def test_cors_headers_for_deployed_frontend():
+    """Verifies that CORS allows requests from the deployed Vercel frontend origin."""
+    transport = ASGITransport(app=app)
+    frontend_origin = "https://resq-vision-alpha.vercel.app"
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Preflight OPTIONS request
+        response = await client.options(
+            "/health",
+            headers={
+                "Origin": frontend_origin,
+                "Access-Control-Request-Method": "GET",
+            }
+        )
+        assert response.status_code == 200
+        assert response.headers.get("access-control-allow-origin") == frontend_origin
+        assert response.headers.get("access-control-allow-credentials") == "true"
+
+        # Direct GET request with Origin header
+        get_res = await client.get("/health", headers={"Origin": frontend_origin})
+        assert get_res.status_code == 200
+        assert get_res.headers.get("access-control-allow-origin") == frontend_origin
+        assert get_res.headers.get("access-control-allow-credentials") == "true"
+
+

@@ -1,13 +1,28 @@
-const API_BASE = "";
+export const getApiBaseUrl = (env = import.meta.env) => {
+  const envUrl = env?.VITE_API_BASE_URL;
+  if (envUrl && typeof envUrl === "string" && envUrl.trim()) {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+  // In development, default to local FastAPI server on port 8000
+  if (env?.DEV) {
+    return "http://127.0.0.1:8000";
+  }
+  // Production default pointing to the deployed backend
+  return "https://resq-vision-71gv.vercel.app";
+};
+
+export const API_BASE = getApiBaseUrl();
 
 export async function checkHealth() {
-  const res = await fetch(`${API_BASE}/health`);
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/health`);
   if (!res.ok) throw new Error("Health check failed");
   return res.json();
 }
 
 export async function setServerApiKey(apiKey) {
-  const res = await fetch(`${API_BASE}/api/config/api-key`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/config/api-key`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ api_key: apiKey }),
@@ -20,7 +35,8 @@ export async function setServerApiKey(apiKey) {
 }
 
 export async function setServerDOToken(token) {
-  const res = await fetch(`${API_BASE}/api/config/do-token`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/config/do-token`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token }),
@@ -33,7 +49,8 @@ export async function setServerDOToken(token) {
 }
 
 export async function setServerAIProvider(provider) {
-  const res = await fetch(`${API_BASE}/api/config/provider`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/config/provider`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ provider }),
@@ -46,7 +63,8 @@ export async function setServerAIProvider(provider) {
 }
 
 export async function analyzeIncident(formData) {
-  const res = await fetch(`${API_BASE}/api/analyze`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/analyze`, {
     method: "POST",
     body: formData,
   });
@@ -58,7 +76,8 @@ export async function analyzeIncident(formData) {
 }
 
 export async function analyzeMultiImage(formData) {
-  const res = await fetch(`${API_BASE}/api/analyze/multi-image`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/analyze/multi-image`, {
     method: "POST",
     body: formData,
   });
@@ -70,7 +89,8 @@ export async function analyzeMultiImage(formData) {
 }
 
 export async function generateReport(incidentData) {
-  const res = await fetch(`${API_BASE}/api/incident/report`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/incident/report`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(incidentData),
@@ -83,7 +103,8 @@ export async function generateReport(incidentData) {
 }
 
 export async function generateChecklist(incidentData) {
-  const res = await fetch(`${API_BASE}/api/incident/checklist`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/incident/checklist`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(incidentData),
@@ -96,7 +117,8 @@ export async function generateChecklist(incidentData) {
 }
 
 export async function translateIncident(incidentData, targetLanguage) {
-  const res = await fetch(`${API_BASE}/api/translate`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/translate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -114,19 +136,22 @@ export async function translateIncident(incidentData, targetLanguage) {
 }
 
 export async function getIncidents() {
-  const res = await fetch(`${API_BASE}/api/incidents`);
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/incidents`);
   if (!res.ok) throw new Error("Failed to load incident history");
   return res.json();
 }
 
 export async function getIncidentById(id) {
-  const res = await fetch(`${API_BASE}/api/incidents/${id}`);
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/incidents/${id}`);
   if (!res.ok) throw new Error("Incident not found");
   return res.json();
 }
 
 export async function deleteIncident(id) {
-  const res = await fetch(`${API_BASE}/api/incidents/${id}`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/incidents/${id}`, {
     method: "DELETE",
   });
   if (!res.ok) throw new Error("Failed to delete incident");
@@ -134,7 +159,8 @@ export async function deleteIncident(id) {
 }
 
 export async function exportPdf(reportData) {
-  const res = await fetch(`${API_BASE}/api/export?format=pdf`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/export?format=pdf`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(reportData),
@@ -152,13 +178,15 @@ export async function exportPdf(reportData) {
 }
 
 export async function getEvaluation() {
-  const res = await fetch(`${API_BASE}/api/evaluation`);
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/evaluation`);
   if (!res.ok) throw new Error("Failed to run local regression benchmark suite");
   return res.json();
 }
 
 export async function runLiveEvaluation(count = 3, scenarioIds = null) {
-  const res = await fetch(`${API_BASE}/api/evaluation/live`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/evaluation/live`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -174,13 +202,15 @@ export async function runLiveEvaluation(count = 3, scenarioIds = null) {
 }
 
 export async function getDemoScenarios() {
-  const res = await fetch(`${API_BASE}/api/demo-scenarios`);
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/demo-scenarios`);
   if (!res.ok) throw new Error("Failed to load demonstration scenarios");
   return res.json();
 }
 
 export async function saveIncidentEndpoint(incidentData) {
-  const res = await fetch(`${API_BASE}/api/incident/save`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/incident/save`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ incident_data: incidentData }),
@@ -190,7 +220,8 @@ export async function saveIncidentEndpoint(incidentData) {
 }
 
 export async function runAgentWorkflow(incidentData, goals) {
-  const res = await fetch(`${API_BASE}/api/agent/workflow`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await fetch(`${baseUrl}/api/agent/workflow`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

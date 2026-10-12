@@ -44,6 +44,7 @@ class SetProviderRequest(BaseModel):
     provider: str
 
 @router.get("/health", tags=["System"])
+@router.get("/api/health", tags=["System"])
 async def health_check():
     """System health check and configuration audit."""
     has_api_key = bool(settings.GEMINI_API_KEY)
